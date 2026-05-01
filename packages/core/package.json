@@ -1,0 +1,20 @@
+{
+  "name": "@repo/core",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "lint": "tsc --noEmit",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1039.0",
+    "@repo/db": "workspace:*",
+    "@repo/utils": "workspace:*",
+    "ioredis": "^5.10.1",
+    "openai": "^6.35.0"
+  }
+}
