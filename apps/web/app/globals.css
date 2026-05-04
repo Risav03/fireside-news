@@ -115,6 +115,10 @@ h1 {
   color: var(--muted);
 }
 
+.now-card .source-line {
+  margin-top: 0.5rem;
+}
+
 .now-card button {
   min-width: 9rem;
   border: 0;

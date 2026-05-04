@@ -24,7 +24,10 @@ export type TimelineSegment = {
   type: AudioType;
   title: string;
   category: NewsCategory | "station";
+  /** MP3 or other playable asset URL */
   url: string;
+  /** Original article URL when this segment is a headline tied to an Article */
+  sourceUrl: string | null;
 };
 
 export type TimelineState = {

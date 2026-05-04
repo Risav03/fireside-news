@@ -191,6 +191,13 @@ export function RadioPlayer() {
             <span className="label">Now Playing</span>
             <h2>{current?.title ?? "Preparing the live timeline"}</h2>
             <p>{current ? `${current.category.toUpperCase()} • ${current.durationSec}s segment` : "Waiting for the first segment."}</p>
+            {current?.sourceUrl ? (
+              <p className="muted source-line">
+                <a href={current.sourceUrl} target="_blank" rel="noopener noreferrer">
+                  Read original article
+                </a>
+              </p>
+            ) : null}
           </div>
           <button onClick={() => void syncPlayback(true)}>{status === "playing" ? "Resync" : "Tap to listen"}</button>
         </div>
@@ -226,6 +233,15 @@ function QueueItem({ segment }: { segment: TimelineSegment }) {
       <strong>{segment.title}</strong>
       <small>
         {segment.category} • {segment.durationSec}s
+        {segment.sourceUrl ? (
+          <>
+            {" "}
+            •{" "}
+            <a href={segment.sourceUrl} target="_blank" rel="noopener noreferrer">
+              Source
+            </a>
+          </>
+        ) : null}
       </small>
     </article>
   );

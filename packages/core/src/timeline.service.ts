@@ -13,6 +13,7 @@ const FALLBACK_STINGER: TimelineSegment = {
   title: "Fireside News station identification",
   category: "station",
   url: "/api/fallback-audio",
+  sourceUrl: null,
 };
 
 export function timelineStartKey(channelId: string) {
@@ -94,10 +95,14 @@ async function readTimeline(redis: Redis, channelId: string): Promise<TimelineSt
     return null;
   }
 
+  const segments = JSON.parse(segmentsJson) as TimelineSegment[];
   return {
     channelId,
     startTime: Number(startTime),
-    segments: JSON.parse(segmentsJson) as TimelineSegment[],
+    segments: segments.map((segment) => ({
+      ...segment,
+      sourceUrl: segment.sourceUrl ?? null,
+    })),
   };
 }
 
@@ -131,6 +136,7 @@ async function loadTimelineAudio(prisma: PrismaClient, recentPlayed: Set<string>
     title: row.content?.headline ?? (row.type === "bulletin" ? "Hourly bulletin" : "Station update"),
     category: row.content?.article.category ?? "station",
     url: row.url,
+    sourceUrl: row.content?.article.url ?? null,
   }));
 }
 

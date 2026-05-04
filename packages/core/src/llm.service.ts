@@ -1,18 +1,20 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { PrismaClient } from "@repo/db";
 import { clamp, requireEnv } from "@repo/utils";
-import { estimateSpokenDurationSec } from "./text";
+import { estimateSpokenDurationSec, truncateToMaxWords } from "./text";
 import type { ProcessedContent } from "./types";
 
+const MAX_SUMMARY_WORDS = 500;
+
 const ANCHOR_SYSTEM_PROMPT =
-  "You are a professional news anchor. Speak clearly, concisely, and formally. Write short audio-ready copy without markdown.";
+  "You are a professional news editor. Write clear, factual news copy without markdown. The headline must be a single punchy line suitable for reading aloud; the summary may be longer prose but must stay within the word limit given in the user message.";
 const ANTHROPIC_MODEL = "claude-haiku-4-5";
 const SUMMARY_TOOL_NAME = "record_processed_news";
 
 const SUMMARY_TOOL = {
   name: SUMMARY_TOOL_NAME,
   description:
-    "Return the processed news copy for a single article. Use this exactly once with an audio-ready headline, short summary, and importance score.",
+    `Return the processed news copy for a single article. Use this exactly once with a headline, a summary of at most ${MAX_SUMMARY_WORDS} words, and an importance score.`,
   input_schema: {
     type: "object" as const,
     additionalProperties: false,
@@ -37,7 +39,7 @@ export async function summarizeArticle(
 ): Promise<ProcessedContent> {
   const response = await anthropic.messages.create({
     model: ANTHROPIC_MODEL,
-    max_tokens: 500,
+    max_tokens: 3_072,
     system: ANCHOR_SYSTEM_PROMPT,
     tools: [SUMMARY_TOOL],
     tool_choice: {
@@ -47,7 +49,7 @@ export async function summarizeArticle(
     messages: [
       {
         role: "user",
-        content: `Create an audio news headline and short summary for this item.\n\nTitle: ${input.title}\nSource: ${input.source}\nContent: ${input.content}\n\nReturn strict JSON with keys: headline, summary, importance. Importance is an integer from 1 to 100. The headline plus summary must be speakable in 5 to 20 seconds.`,
+        content: `Create a news headline and summary for this item.\n\nTitle: ${input.title}\nSource: ${input.source}\nContent: ${input.content}\n\nHeadline: one concise line, suitable to read aloud.\nSummary: plain prose, at most ${MAX_SUMMARY_WORDS} words, no bullet lists.\nImportance: integer from 1 to 100.`,
       },
     ],
   });
@@ -58,9 +60,11 @@ export async function summarizeArticle(
   );
   const parsed = parseSummaryToolInput(summaryToolUse?.input);
 
+  const summary = truncateToMaxWords(parsed.summary.trim(), MAX_SUMMARY_WORDS);
+
   return {
     headline: parsed.headline.trim(),
-    summary: parsed.summary.trim(),
+    summary,
     priority: clamp(parsed.importance, 1, 100),
   };
 }

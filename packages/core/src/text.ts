@@ -25,6 +25,18 @@ export function canonicalUrl(url: string): string {
   }
 }
 
+export function countWords(value: string): number {
+  return value.trim().split(/\s+/).filter(Boolean).length;
+}
+
+export function truncateToMaxWords(value: string, maxWords: number): string {
+  const words = value.trim().split(/\s+/).filter(Boolean);
+  if (words.length <= maxWords) {
+    return value.trim();
+  }
+  return words.slice(0, maxWords).join(" ");
+}
+
 export function estimateSpokenDurationSec(text: string): number {
   const words = normalizeText(text).split(" ").filter(Boolean).length;
   return Math.max(5, Math.ceil((words / 150) * 60));
