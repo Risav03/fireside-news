@@ -10,10 +10,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@repo/core": "*",
-    "@repo/db": "*",
-    "@repo/queue": "*",
-    "@repo/utils": "*",
+    "@repo/core": "file:../../packages/core",
+    "@repo/db": "file:../../packages/db",
+    "@repo/queue": "file:../../packages/queue",
+    "@repo/utils": "file:../../packages/utils",
     "dotenv": "^17.4.2",
     "next": "^16.2.4",
     "react": "^19.2.5",

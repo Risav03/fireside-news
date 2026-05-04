@@ -10,10 +10,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@repo/core": "*",
-    "@repo/db": "*",
-    "@repo/queue": "*",
-    "@repo/utils": "*",
+    "@repo/core": "file:../../packages/core",
+    "@repo/db": "file:../../packages/db",
+    "@repo/queue": "file:../../packages/queue",
+    "@repo/utils": "file:../../packages/utils",
     "bullmq": "^5.76.4",
     "dotenv": "^17.4.2",
     "tsx": "^4.21.0"

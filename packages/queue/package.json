@@ -11,7 +11,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@repo/utils": "*",
+    "@repo/utils": "file:../utils",
     "bullmq": "^5.76.4",
     "ioredis": "^5.10.1"
   }

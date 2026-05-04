@@ -13,10 +13,10 @@
     "apps/server": {
       "name": "@repo/server",
       "dependencies": {
-        "@repo/core": "*",
-        "@repo/db": "*",
-        "@repo/queue": "*",
-        "@repo/utils": "*",
+        "@repo/core": "file:../../packages/core",
+        "@repo/db": "file:../../packages/db",
+        "@repo/queue": "file:../../packages/queue",
+        "@repo/utils": "file:../../packages/utils",
         "bullmq": "^5.76.4",
         "dotenv": "^17.4.2",
         "tsx": "^4.21.0",
@@ -25,10 +25,10 @@
     "apps/web": {
       "name": "@repo/web",
       "dependencies": {
-        "@repo/core": "*",
-        "@repo/db": "*",
-        "@repo/queue": "*",
-        "@repo/utils": "*",
+        "@repo/core": "file:../../packages/core",
+        "@repo/db": "file:../../packages/db",
+        "@repo/queue": "file:../../packages/queue",
+        "@repo/utils": "file:../../packages/utils",
         "dotenv": "^17.4.2",
         "next": "^16.2.4",
         "react": "^19.2.5",
@@ -44,8 +44,8 @@
       "dependencies": {
         "@anthropic-ai/sdk": "^0.92.0",
         "@aws-sdk/client-s3": "^3.1039.0",
-        "@repo/db": "*",
-        "@repo/utils": "*",
+        "@repo/db": "file:../db",
+        "@repo/utils": "file:../utils",
         "ioredis": "^5.10.1",
       },
     },
@@ -54,7 +54,7 @@
       "dependencies": {
         "@prisma/adapter-pg": "^7.8.0",
         "@prisma/client": "^7.8.0",
-        "@repo/utils": "*",
+        "@repo/utils": "file:../utils",
         "pg": "^8.20.0",
         "prisma": "^7.8.0",
       },
@@ -65,7 +65,7 @@
     "packages/queue": {
       "name": "@repo/queue",
       "dependencies": {
-        "@repo/utils": "*",
+        "@repo/utils": "file:../utils",
         "bullmq": "^5.76.4",
         "ioredis": "^5.10.1",
       },
@@ -746,6 +746,16 @@
     "@prisma/fetch-engine/@prisma/get-platform": ["@prisma/get-platform@7.8.0", "", { "dependencies": { "@prisma/debug": "7.8.0" } }, "sha512-WlxgRGnolL8VH2EmkH1R/DkKNr/mVdS3G2h42IZFFZ3eUrH9OT6t73kIOSlkkrv50wG123Iq8d96ufv5LlZktw=="],
 
     "@prisma/get-platform/@prisma/debug": ["@prisma/debug@7.2.0", "", {}, "sha512-YSGTiSlBAVJPzX4ONZmMotL+ozJwQjRmZweQNIq/ER0tQJKJynNkRB3kyvt37eOfsbMCXk3gnLF6J9OJ4QWftw=="],
+
+    "@repo/core/@repo/utils": ["@repo/utils@file:packages/utils", {}],
+
+    "@repo/db/@repo/utils": ["@repo/utils@file:packages/utils", {}],
+
+    "@repo/queue/@repo/utils": ["@repo/utils@file:packages/utils", {}],
+
+    "@repo/server/@repo/utils": ["@repo/utils@file:packages/utils", {}],
+
+    "@repo/web/@repo/utils": ["@repo/utils@file:packages/utils", {}],
 
     "pg-types/postgres-array": ["postgres-array@2.0.0", "", {}, "sha512-VpZrUqU5A69eQyW2c5CA1jtLecCsN2U/bD6VilrFDWq5+5UIEVO7nazS3TEcHf1zuPYO/sqGvUvW62g86RXZuA=="],
 
