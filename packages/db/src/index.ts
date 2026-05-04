@@ -6,16 +6,35 @@ const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
 };
 
-export const prisma =
-  globalForPrisma.prisma ??
-  new PrismaClient({
+let prismaForProd: PrismaClient | undefined;
+
+function createPrismaClient(): PrismaClient {
+  return new PrismaClient({
     adapter: new PrismaPg({
       connectionString: requireEnv("DATABASE_URL"),
     }),
   });
-
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma;
 }
+
+function getPrisma(): PrismaClient {
+  if (process.env.NODE_ENV !== "production") {
+    globalForPrisma.prisma ??= createPrismaClient();
+    return globalForPrisma.prisma;
+  }
+  prismaForProd ??= createPrismaClient();
+  return prismaForProd;
+}
+
+/** Lazily connects so importing `@repo/db` does not require env at module load (e.g. `next build`). */
+export const prisma = new Proxy({} as PrismaClient, {
+  get(_target, prop, receiver) {
+    const client = getPrisma();
+    const value = Reflect.get(client, prop, receiver) as unknown;
+    if (typeof value === "function") {
+      return (value as (...args: unknown[]) => unknown).bind(client);
+    }
+    return value;
+  },
+}) as PrismaClient;
 
 export * from "./generated/client";
