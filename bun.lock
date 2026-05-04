@@ -747,13 +747,27 @@
 
     "@prisma/get-platform/@prisma/debug": ["@prisma/debug@7.2.0", "", {}, "sha512-YSGTiSlBAVJPzX4ONZmMotL+ozJwQjRmZweQNIq/ER0tQJKJynNkRB3kyvt37eOfsbMCXk3gnLF6J9OJ4QWftw=="],
 
+    "@repo/core/@repo/db": ["@repo/db@file:packages/db", { "dependencies": { "@prisma/adapter-pg": "^7.8.0", "@prisma/client": "^7.8.0", "@repo/utils": "file:../utils", "pg": "^8.20.0", "prisma": "^7.8.0" }, "devDependencies": { "@types/pg": "^8.20.0" } }],
+
     "@repo/core/@repo/utils": ["@repo/utils@file:packages/utils", {}],
 
     "@repo/db/@repo/utils": ["@repo/utils@file:packages/utils", {}],
 
     "@repo/queue/@repo/utils": ["@repo/utils@file:packages/utils", {}],
 
+    "@repo/server/@repo/core": ["@repo/core@file:packages/core", { "dependencies": { "@anthropic-ai/sdk": "^0.92.0", "@aws-sdk/client-s3": "^3.1039.0", "@repo/db": "file:../db", "@repo/utils": "file:../utils", "ioredis": "^5.10.1" } }],
+
+    "@repo/server/@repo/db": ["@repo/db@file:packages/db", { "dependencies": { "@prisma/adapter-pg": "^7.8.0", "@prisma/client": "^7.8.0", "@repo/utils": "file:../utils", "pg": "^8.20.0", "prisma": "^7.8.0" }, "devDependencies": { "@types/pg": "^8.20.0" } }],
+
+    "@repo/server/@repo/queue": ["@repo/queue@file:packages/queue", { "dependencies": { "@repo/utils": "file:../utils", "bullmq": "^5.76.4", "ioredis": "^5.10.1" } }],
+
     "@repo/server/@repo/utils": ["@repo/utils@file:packages/utils", {}],
+
+    "@repo/web/@repo/core": ["@repo/core@file:packages/core", { "dependencies": { "@anthropic-ai/sdk": "^0.92.0", "@aws-sdk/client-s3": "^3.1039.0", "@repo/db": "file:../db", "@repo/utils": "file:../utils", "ioredis": "^5.10.1" } }],
+
+    "@repo/web/@repo/db": ["@repo/db@file:packages/db", { "dependencies": { "@prisma/adapter-pg": "^7.8.0", "@prisma/client": "^7.8.0", "@repo/utils": "file:../utils", "pg": "^8.20.0", "prisma": "^7.8.0" }, "devDependencies": { "@types/pg": "^8.20.0" } }],
+
+    "@repo/web/@repo/queue": ["@repo/queue@file:packages/queue", { "dependencies": { "@repo/utils": "file:../utils", "bullmq": "^5.76.4", "ioredis": "^5.10.1" } }],
 
     "@repo/web/@repo/utils": ["@repo/utils@file:packages/utils", {}],
 
@@ -766,6 +780,24 @@
     "@aws-crypto/sha256-browser/@smithy/util-utf8/@smithy/util-buffer-from": ["@smithy/util-buffer-from@2.2.0", "", { "dependencies": { "@smithy/is-array-buffer": "2.2.0", "tslib": "2.8.1" } }, "sha512-IJdWBbTcMQ6DA0gdNhh/BwrLkDR+ADW5Kr1aZmd4k3DIF6ezMV4R2NIAmT08wQJ3yUK82thHWmC/TnK/wpMMIA=="],
 
     "@aws-crypto/util/@smithy/util-utf8/@smithy/util-buffer-from": ["@smithy/util-buffer-from@2.2.0", "", { "dependencies": { "@smithy/is-array-buffer": "2.2.0", "tslib": "2.8.1" } }, "sha512-IJdWBbTcMQ6DA0gdNhh/BwrLkDR+ADW5Kr1aZmd4k3DIF6ezMV4R2NIAmT08wQJ3yUK82thHWmC/TnK/wpMMIA=="],
+
+    "@repo/core/@repo/db/@repo/utils": ["@repo/utils@file:packages/utils", {}],
+
+    "@repo/server/@repo/core/@repo/db": ["@repo/db@file:packages/db", {}],
+
+    "@repo/server/@repo/core/@repo/utils": ["@repo/utils@file:packages/utils", {}],
+
+    "@repo/server/@repo/db/@repo/utils": ["@repo/utils@file:packages/utils", {}],
+
+    "@repo/server/@repo/queue/@repo/utils": ["@repo/utils@file:packages/utils", {}],
+
+    "@repo/web/@repo/core/@repo/db": ["@repo/db@file:packages/db", {}],
+
+    "@repo/web/@repo/core/@repo/utils": ["@repo/utils@file:packages/utils", {}],
+
+    "@repo/web/@repo/db/@repo/utils": ["@repo/utils@file:packages/utils", {}],
+
+    "@repo/web/@repo/queue/@repo/utils": ["@repo/utils@file:packages/utils", {}],
 
     "@aws-crypto/sha1-browser/@smithy/util-utf8/@smithy/util-buffer-from/@smithy/is-array-buffer": ["@smithy/is-array-buffer@2.2.0", "", { "dependencies": { "tslib": "2.8.1" } }, "sha512-GGP3O9QFD24uGeAXYUjwSTXARoqpZykHadOmA8G5vfJPK0/DC67qa//0qvqrJzL1xc8WQWX7/yc7fwudjPHPhA=="],
 
