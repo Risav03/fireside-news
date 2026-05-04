@@ -120,17 +120,18 @@ async function loadTimelineAudio(prisma: PrismaClient, recentPlayed: Set<string>
     },
   });
 
-  return rows
-    .filter((row) => !recentPlayed.has(row.id))
-    .map((row) => ({
-      audioId: row.id,
-      durationSec: row.durationSec,
-      startedAt: 0,
-      type: row.type,
-      title: row.content?.headline ?? (row.type === "bulletin" ? "Hourly bulletin" : "Station update"),
-      category: row.content?.article.category ?? "station",
-      url: row.url,
-    }));
+  const playableRows = rows.filter((row) => !recentPlayed.has(row.id));
+  const timelineRows = playableRows.length > 0 ? playableRows : rows;
+
+  return timelineRows.map((row) => ({
+    audioId: row.id,
+    durationSec: row.durationSec,
+    startedAt: 0,
+    type: row.type,
+    title: row.content?.headline ?? (row.type === "bulletin" ? "Hourly bulletin" : "Station update"),
+    category: row.content?.article.category ?? "station",
+    url: row.url,
+  }));
 }
 
 function fillTimeline(startTime: number, candidates: TimelineSegment[]): TimelineSegment[] {

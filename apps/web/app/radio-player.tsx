@@ -10,31 +10,133 @@ export function RadioPlayer() {
   const secondaryRef = useRef<HTMLAudioElement | null>(null);
   const musicRef = useRef<HTMLAudioElement | null>(null);
   const activeRef = useRef<0 | 1>(0);
+  const syncInFlightRef = useRef(false);
+  const queuedSyncRef = useRef(false);
+  const queuedManualStartRef = useRef(false);
+  const syncVersionRef = useRef(0);
+  const transitionVersionRef = useRef(0);
+  const fadeVersionsRef = useRef(new WeakMap<HTMLAudioElement, number>());
   const [payload, setPayload] = useState<NowPlayingResponse | null>(null);
   const [status, setStatus] = useState<PlaybackStatus>("idle");
   const [error, setError] = useState<string | null>(null);
   const activeSegmentId = payload?.currentAudio.audioId;
 
-  const syncPlayback = useCallback(async (manualStart = false) => {
-    try {
-      setStatus((current) => (current === "playing" ? current : "loading"));
-      const response = await fetch(`/api/now-playing?ts=${Date.now()}`, {
-        cache: "no-store",
-      });
+  const stopAllAudio = useCallback(() => {
+    stopAudio(primaryRef.current, fadeVersionsRef.current);
+    stopAudio(secondaryRef.current, fadeVersionsRef.current);
+    stopAudio(musicRef.current, fadeVersionsRef.current);
+  }, []);
 
-      if (!response.ok) {
-        throw new Error(`Now playing request failed: ${response.status}`);
+  const playSegment = useCallback(
+    async (nextPayload: NowPlayingResponse, manualStart: boolean, syncVersion: number) => {
+      const transitionVersion = transitionVersionRef.current + 1;
+      transitionVersionRef.current = transitionVersion;
+      const audioElements = [primaryRef.current, secondaryRef.current] as const;
+      const active = audioElements[activeRef.current];
+      const inactiveIndex = activeRef.current === 0 ? 1 : 0;
+      const inactive = audioElements[inactiveIndex];
+
+      if (!active || !inactive) {
+        return;
       }
 
-      const nextPayload = (await response.json()) as NowPlayingResponse;
-      setPayload(nextPayload);
-      setError(null);
-      await playSegment(nextPayload, manualStart);
-    } catch (cause) {
-      setStatus("error");
-      setError(cause instanceof Error ? cause.message : "Playback failed.");
+      if (!manualStart && active.dataset.audioId === nextPayload.currentAudio.audioId && !active.paused) {
+        stopAudio(inactive, fadeVersionsRef.current);
+        const drift = Math.abs(active.currentTime - nextPayload.currentAudio.offsetSec);
+
+        if (drift > 1.5) {
+          active.currentTime = nextPayload.currentAudio.offsetSec;
+        }
+
+        return;
+      }
+
+      stopAudio(inactive, fadeVersionsRef.current);
+      inactive.src = nextPayload.currentAudio.url;
+      inactive.dataset.audioId = nextPayload.currentAudio.audioId;
+      inactive.currentTime = nextPayload.currentAudio.offsetSec;
+      inactive.volume = manualStart ? 1 : 0.92;
+
+      try {
+        await inactive.play();
+
+        if (syncVersion !== syncVersionRef.current || transitionVersion !== transitionVersionRef.current) {
+          stopAudio(inactive, fadeVersionsRef.current);
+          return;
+        }
+
+        fadeOut(active, fadeVersionsRef.current);
+        activeRef.current = inactiveIndex;
+        setStatus("playing");
+
+        if (musicRef.current) {
+          musicRef.current.volume = 0.12;
+          await musicRef.current.play().catch(() => undefined);
+        }
+      } catch {
+        stopAllAudio();
+        setStatus("blocked");
+      }
+    },
+    [stopAllAudio],
+  );
+
+  const syncPlayback = useCallback(async (manualStart = false) => {
+    if (syncInFlightRef.current) {
+      queuedSyncRef.current = true;
+      queuedManualStartRef.current ||= manualStart;
+      return;
     }
-  }, []);
+
+    syncInFlightRef.current = true;
+    let nextManualStart = manualStart;
+
+    try {
+      do {
+        queuedSyncRef.current = false;
+        const shouldManualStart = nextManualStart || queuedManualStartRef.current;
+        queuedManualStartRef.current = false;
+        nextManualStart = false;
+        await runSync(shouldManualStart);
+      } while (queuedSyncRef.current);
+    } finally {
+      syncInFlightRef.current = false;
+    }
+
+    async function runSync(shouldManualStart: boolean) {
+      const syncVersion = syncVersionRef.current + 1;
+      syncVersionRef.current = syncVersion;
+
+      try {
+        setStatus((current) => (current === "playing" ? current : "loading"));
+        const response = await fetch(`/api/now-playing?ts=${Date.now()}`, {
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          throw new Error(`Now playing request failed: ${response.status}`);
+        }
+
+        const nextPayload = (await response.json()) as NowPlayingResponse;
+
+        if (syncVersion !== syncVersionRef.current) {
+          return;
+        }
+
+        setPayload(nextPayload);
+        setError(null);
+        await playSegment(nextPayload, shouldManualStart, syncVersion);
+      } catch (cause) {
+        if (syncVersion !== syncVersionRef.current) {
+          return;
+        }
+
+        stopAllAudio();
+        setStatus("error");
+        setError(cause instanceof Error ? cause.message : "Playback failed.");
+      }
+    }
+  }, [playSegment, stopAllAudio]);
 
   useEffect(() => {
     void syncPlayback();
@@ -71,51 +173,6 @@ export function RadioPlayer() {
 
     return Math.min(100, Math.round((payload.currentAudio.offsetSec / payload.currentAudio.durationSec) * 100));
   }, [payload]);
-
-  async function playSegment(nextPayload: NowPlayingResponse, manualStart: boolean) {
-    const audioElements = [primaryRef.current, secondaryRef.current] as const;
-    const active = audioElements[activeRef.current];
-
-    if (!active) {
-      return;
-    }
-
-    if (!manualStart && active.dataset.audioId === nextPayload.currentAudio.audioId && !active.paused) {
-      const drift = Math.abs(active.currentTime - nextPayload.currentAudio.offsetSec);
-
-      if (drift > 1.5) {
-        active.currentTime = nextPayload.currentAudio.offsetSec;
-      }
-
-      return;
-    }
-
-    const inactiveIndex = activeRef.current === 0 ? 1 : 0;
-    const inactive = audioElements[inactiveIndex];
-
-    if (!inactive) {
-      return;
-    }
-
-    inactive.src = nextPayload.currentAudio.url;
-    inactive.dataset.audioId = nextPayload.currentAudio.audioId;
-    inactive.currentTime = nextPayload.currentAudio.offsetSec;
-    inactive.volume = manualStart ? 1 : 0.92;
-
-    try {
-      await inactive.play();
-      fadeOut(active);
-      activeRef.current = inactiveIndex;
-      setStatus("playing");
-
-      if (musicRef.current) {
-        musicRef.current.volume = 0.12;
-        await musicRef.current.play().catch(() => undefined);
-      }
-    } catch {
-      setStatus("blocked");
-    }
-  }
 
   const current = payload?.currentAudio;
 
@@ -155,8 +212,8 @@ export function RadioPlayer() {
         </div>
       </aside>
 
-      <audio ref={primaryRef} crossOrigin="anonymous" />
-      <audio ref={secondaryRef} crossOrigin="anonymous" />
+      <audio ref={primaryRef} />
+      <audio ref={secondaryRef} />
       <audio ref={musicRef} src="/api/fallback-audio?kind=bed" loop preload="auto" />
     </section>
   );
@@ -186,16 +243,36 @@ function StatusLine({ status, error }: { status: PlaybackStatus; error: string |
   return <p className="status">Status: {status}</p>;
 }
 
-function fadeOut(audio: HTMLAudioElement | null) {
+type FadeVersions = WeakMap<HTMLAudioElement, number>;
+
+function stopAudio(audio: HTMLAudioElement | null, fadeVersions: FadeVersions) {
+  if (!audio) {
+    return;
+  }
+
+  nextFadeVersion(audio, fadeVersions);
+  audio.pause();
+
+  try {
+    audio.currentTime = 0;
+  } catch {
+    // Some browsers can reject seeking while media metadata is being replaced.
+  }
+
+  audio.volume = 1;
+}
+
+function fadeOut(audio: HTMLAudioElement | null, fadeVersions: FadeVersions) {
   if (!audio || audio.paused) {
     return;
   }
 
+  const fadeVersion = nextFadeVersion(audio, fadeVersions);
   const start = audio.volume;
   const startedAt = performance.now();
 
   function tick(now: number) {
-    if (!audio) {
+    if (!audio || fadeVersions.get(audio) !== fadeVersion) {
       return;
     }
 
@@ -213,4 +290,10 @@ function fadeOut(audio: HTMLAudioElement | null) {
   }
 
   requestAnimationFrame(tick);
+}
+
+function nextFadeVersion(audio: HTMLAudioElement, fadeVersions: FadeVersions) {
+  const version = (fadeVersions.get(audio) ?? 0) + 1;
+  fadeVersions.set(audio, version);
+  return version;
 }

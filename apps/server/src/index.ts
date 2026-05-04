@@ -1,8 +1,9 @@
+import "./env.js";
 import { Worker } from "bullmq";
 import { prisma } from "@repo/db";
 import {
   buildRollingTimeline,
-  createOpenAIClient,
+  createAnthropicClient,
   estimateSpokenDurationSec,
   fetchCryptoArticles,
   fetchNewsArticles,
@@ -28,8 +29,12 @@ import { optionalEnv } from "@repo/utils";
 
 const channelId = optionalEnv("CHANNEL_ID", "main");
 const queues = createQueues();
-const openai = createOpenAIClient();
+const anthropic = createAnthropicClient();
 const timelineRedis = createRedisConnection();
+
+timelineRedis.on("error", (error) => {
+  console.error(`[timeline] redis connection error: ${formatError(error)}`);
+});
 
 await registerSchedulers(queues, channelId);
 
@@ -58,7 +63,7 @@ const processingWorker = new Worker(
   async (job) => {
     if (job.name === JOB_NAMES.processNews) {
       const data = job.data as ProcessNewsJob;
-      const contentIds = await processArticles(prisma, openai, data.articleIds);
+      const contentIds = await processArticles(prisma, anthropic, data.articleIds);
 
       await Promise.all(
         contentIds.map((contentId) =>
@@ -74,7 +79,7 @@ const processingWorker = new Worker(
 
     if (job.name === JOB_NAMES.generateBulletin) {
       const scheduledForHour = currentHour();
-      const script = await generateBulletinScript(prisma, openai, scheduledForHour);
+      const script = await generateBulletinScript(prisma, anthropic, scheduledForHour);
       const bulletin = await prisma.bulletin.upsert({
         where: {
           scheduledForHour,
@@ -138,8 +143,31 @@ const timelineWorker = new Worker(
   { connection: createRedisConnection({ blocking: true }), concurrency: 1 },
 );
 
+const workers = [
+  [QUEUE_NAMES.ingestion, ingestionWorker],
+  [QUEUE_NAMES.processing, processingWorker],
+  [QUEUE_NAMES.media, mediaWorker],
+  [QUEUE_NAMES.timeline, timelineWorker],
+] as const;
+
+for (const [queueName, worker] of workers) {
+  worker.on("error", (error) => {
+    console.error(`[${queueName}] worker error: ${formatError(error)}`);
+  });
+}
+
+for (const [queueName, queue] of Object.entries(queues)) {
+  queue.on("error", (error) => {
+    console.error(`[${queueName}] queue error: ${formatError(error)}`);
+  });
+}
+
 const events = Object.values(QUEUE_NAMES).map((queueName) => {
   const queueEvents = createQueueEvents(queueName);
+
+  queueEvents.on("error", (error) => {
+    console.error(`[${queueName}] queue events error: ${formatError(error)}`);
+  });
 
   queueEvents.on("failed", ({ jobId, failedReason }) => {
     console.error(`[${queueName}] job ${jobId} failed: ${failedReason}`);
@@ -173,6 +201,10 @@ function currentHour() {
   const date = new Date();
   date.setUTCMinutes(0, 0, 0);
   return date;
+}
+
+function formatError(error: unknown) {
+  return error instanceof Error ? `${error.message}\n${error.stack ?? ""}` : String(error);
 }
 
 async function shutdown() {

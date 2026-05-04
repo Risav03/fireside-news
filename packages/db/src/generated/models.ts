@@ -8,8 +8,8 @@
  *
  * 🟢 You can import this file directly.
  */
-export type * from './models/Article.js'
-export type * from './models/Content.js'
-export type * from './models/Bulletin.js'
-export type * from './models/Audio.js'
-export type * from './commonInputTypes.js'
+export type * from './models/Article'
+export type * from './models/Content'
+export type * from './models/Bulletin'
+export type * from './models/Audio'
+export type * from './commonInputTypes'

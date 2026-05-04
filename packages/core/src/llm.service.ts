@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+import Anthropic from "@anthropic-ai/sdk";
 import type { PrismaClient } from "@repo/db";
 import { clamp, requireEnv } from "@repo/utils";
 import { estimateSpokenDurationSec } from "./text";
@@ -6,49 +6,57 @@ import type { ProcessedContent } from "./types";
 
 const ANCHOR_SYSTEM_PROMPT =
   "You are a professional news anchor. Speak clearly, concisely, and formally. Write short audio-ready copy without markdown.";
+const ANTHROPIC_MODEL = "claude-haiku-4-5";
+const SUMMARY_TOOL_NAME = "record_processed_news";
 
-export function createOpenAIClient() {
-  return new OpenAI({
-    apiKey: requireEnv("OPENAI_API_KEY"),
+const SUMMARY_TOOL = {
+  name: SUMMARY_TOOL_NAME,
+  description:
+    "Return the processed news copy for a single article. Use this exactly once with an audio-ready headline, short summary, and importance score.",
+  input_schema: {
+    type: "object" as const,
+    additionalProperties: false,
+    required: ["headline", "summary", "importance"],
+    properties: {
+      headline: { type: "string" as const },
+      summary: { type: "string" as const },
+      importance: { type: "integer" as const, minimum: 1, maximum: 100 },
+    },
+  },
+};
+
+export function createAnthropicClient() {
+  return new Anthropic({
+    apiKey: requireEnv("ANTHROPIC_API_KEY"),
   });
 }
 
-export async function summarizeArticle(openai: OpenAI, input: { title: string; content: string; source: string }): Promise<ProcessedContent> {
-  const response = await openai.responses.create({
-    model: "gpt-4.1-mini",
-    input: [
-      {
-        role: "system",
-        content: ANCHOR_SYSTEM_PROMPT,
-      },
+export async function summarizeArticle(
+  anthropic: Anthropic,
+  input: { title: string; content: string; source: string },
+): Promise<ProcessedContent> {
+  const response = await anthropic.messages.create({
+    model: ANTHROPIC_MODEL,
+    max_tokens: 500,
+    system: ANCHOR_SYSTEM_PROMPT,
+    tools: [SUMMARY_TOOL],
+    tool_choice: {
+      type: "tool",
+      name: SUMMARY_TOOL_NAME,
+    },
+    messages: [
       {
         role: "user",
         content: `Create an audio news headline and short summary for this item.\n\nTitle: ${input.title}\nSource: ${input.source}\nContent: ${input.content}\n\nReturn strict JSON with keys: headline, summary, importance. Importance is an integer from 1 to 100. The headline plus summary must be speakable in 5 to 20 seconds.`,
       },
     ],
-    text: {
-      format: {
-        type: "json_schema",
-        name: "processed_news",
-        schema: {
-          type: "object",
-          additionalProperties: false,
-          required: ["headline", "summary", "importance"],
-          properties: {
-            headline: { type: "string" },
-            summary: { type: "string" },
-            importance: { type: "integer", minimum: 1, maximum: 100 },
-          },
-        },
-      },
-    },
   });
 
-  const parsed = JSON.parse(response.output_text) as {
-    headline: string;
-    summary: string;
-    importance: number;
-  };
+  const summaryToolUse = response.content.find(
+    (block): block is Extract<(typeof response.content)[number], { type: "tool_use" }> =>
+      block.type === "tool_use" && block.name === SUMMARY_TOOL_NAME,
+  );
+  const parsed = parseSummaryToolInput(summaryToolUse?.input);
 
   return {
     headline: parsed.headline.trim(),
@@ -57,7 +65,7 @@ export async function summarizeArticle(openai: OpenAI, input: { title: string; c
   };
 }
 
-export async function processArticles(prisma: PrismaClient, openai: OpenAI, articleIds: string[]): Promise<string[]> {
+export async function processArticles(prisma: PrismaClient, anthropic: Anthropic, articleIds: string[]): Promise<string[]> {
   const articles = await prisma.article.findMany({
     where: {
       id: {
@@ -73,7 +81,7 @@ export async function processArticles(prisma: PrismaClient, openai: OpenAI, arti
   const contentIds: string[] = [];
 
   for (const article of articles) {
-    const processed = await summarizeArticle(openai, article);
+    const processed = await summarizeArticle(anthropic, article);
     const text = `${processed.headline}. ${processed.summary}`;
     const durationSec = estimateSpokenDurationSec(text);
 
@@ -103,7 +111,11 @@ export async function processArticles(prisma: PrismaClient, openai: OpenAI, arti
   return contentIds;
 }
 
-export async function generateBulletinScript(prisma: PrismaClient, openai: OpenAI, scheduledForHour = new Date()): Promise<string> {
+export async function generateBulletinScript(
+  prisma: PrismaClient,
+  anthropic: Anthropic,
+  scheduledForHour = new Date(),
+): Promise<string> {
   const content = await prisma.content.findMany({
     where: {
       bulletinCandidate: true,
@@ -118,13 +130,11 @@ export async function generateBulletinScript(prisma: PrismaClient, openai: OpenA
     },
   });
 
-  const response = await openai.responses.create({
-    model: "gpt-4.1-mini",
-    input: [
-      {
-        role: "system",
-        content: ANCHOR_SYSTEM_PROMPT,
-      },
+  const response = await anthropic.messages.create({
+    model: ANTHROPIC_MODEL,
+    max_tokens: 4_000,
+    system: ANCHOR_SYSTEM_PROMPT,
+    messages: [
       {
         role: "user",
         content: `Generate a concise hourly AI news radio bulletin for ${scheduledForHour.toISOString()}.\n\nFormat: Intro, Headlines, Summaries, Outro. Keep it around 8 to 10 minutes if enough stories exist; otherwise keep it concise and complete.\n\nItems:\n${content
@@ -134,5 +144,28 @@ export async function generateBulletinScript(prisma: PrismaClient, openai: OpenA
     ],
   });
 
-  return response.output_text.trim();
+  return response.content
+    .filter((block) => block.type === "text")
+    .map((block) => block.text)
+    .join("\n")
+    .trim();
+}
+
+function parseSummaryToolInput(input: unknown) {
+  if (!input || typeof input !== "object") {
+    throw new Error("Anthropic summary response did not include structured tool input.");
+  }
+
+  const record = input as Record<string, unknown>;
+  const { headline, summary, importance } = record;
+
+  if (typeof headline !== "string" || typeof summary !== "string" || typeof importance !== "number") {
+    throw new Error("Anthropic summary response had an invalid structured tool input shape.");
+  }
+
+  return {
+    headline,
+    summary,
+    importance,
+  };
 }

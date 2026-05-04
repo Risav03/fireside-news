@@ -14,5 +14,9 @@
     "@types/node": "^25.6.0",
     "turbo": "^2.9.6",
     "typescript": "^6.0.3"
-  }
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
 }
