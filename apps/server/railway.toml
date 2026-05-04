@@ -19,7 +19,9 @@ watchPatterns = [
   "turbo.json",
   "tsconfig.base.json",
 ]
-buildCommand = "bun install --frozen-lockfile"
+# Railpack may run npm first and leave a package-lock.json; Bun 1.3+ can "migrate"
+# from it and break workspace file: links (/core, /db, …). Drop it and use bun.lock only.
+buildCommand = "rm -f package-lock.json && bun install --frozen-lockfile"
 
 [deploy]
 startCommand = "bun --filter @repo/server start"
