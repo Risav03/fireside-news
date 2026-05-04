@@ -5,6 +5,7 @@
   "scripts": {
     "build": "turbo build",
     "dev": "turbo dev",
+    "start": "npm run start --workspace=@repo/server",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
     "db:generate": "bun --filter @repo/db db:generate",
