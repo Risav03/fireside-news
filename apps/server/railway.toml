@@ -1,0 +1,25 @@
+# Railway config for the @repo/server service.
+#
+# In the Railway service UI:
+# - Leave "Root Directory" empty (repository root). Shared packages under packages/
+#   must stay on disk; setting Root Directory to apps/server alone will break file:
+#   workspace links.
+# - Set "Config as code" path to: apps/server/railway.toml (if not auto-detected).
+
+[build]
+builder = "RAILPACK"
+watchPatterns = [
+  "apps/server/**",
+  "packages/core/**",
+  "packages/db/**",
+  "packages/queue/**",
+  "packages/utils/**",
+  "package.json",
+  "bun.lock",
+  "turbo.json",
+  "tsconfig.base.json",
+]
+buildCommand = "bun install --frozen-lockfile"
+
+[deploy]
+startCommand = "bun --filter @repo/server start"
