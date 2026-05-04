@@ -3,7 +3,8 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [".next/**", "dist/**", "!.next/cache/**"]
+      "outputs": [".next/**", "dist/**", "!.next/cache/**"],
+      "passThroughEnv": ["DATABASE_URL", "REDIS_URL", "CHANNEL_ID"]
     },
     "dev": {
       "cache": false,
