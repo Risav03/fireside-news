@@ -10,10 +10,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@repo/core": "workspace:*",
-    "@repo/db": "workspace:*",
-    "@repo/queue": "workspace:*",
-    "@repo/utils": "workspace:*",
+    "@repo/core": "*",
+    "@repo/db": "*",
+    "@repo/queue": "*",
+    "@repo/utils": "*",
     "dotenv": "^17.4.2",
     "next": "^16.2.4",
     "react": "^19.2.5",

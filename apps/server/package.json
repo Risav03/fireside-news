@@ -10,10 +10,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@repo/core": "workspace:*",
-    "@repo/db": "workspace:*",
-    "@repo/queue": "workspace:*",
-    "@repo/utils": "workspace:*",
+    "@repo/core": "*",
+    "@repo/db": "*",
+    "@repo/queue": "*",
+    "@repo/utils": "*",
     "bullmq": "^5.76.4",
     "dotenv": "^17.4.2",
     "tsx": "^4.21.0"

@@ -13,10 +13,10 @@
     "apps/server": {
       "name": "@repo/server",
       "dependencies": {
-        "@repo/core": "workspace:*",
-        "@repo/db": "workspace:*",
-        "@repo/queue": "workspace:*",
-        "@repo/utils": "workspace:*",
+        "@repo/core": "*",
+        "@repo/db": "*",
+        "@repo/queue": "*",
+        "@repo/utils": "*",
         "bullmq": "^5.76.4",
         "dotenv": "^17.4.2",
         "tsx": "^4.21.0",
@@ -25,10 +25,11 @@
     "apps/web": {
       "name": "@repo/web",
       "dependencies": {
-        "@repo/core": "workspace:*",
-        "@repo/db": "workspace:*",
-        "@repo/queue": "workspace:*",
-        "@repo/utils": "workspace:*",
+        "@repo/core": "*",
+        "@repo/db": "*",
+        "@repo/queue": "*",
+        "@repo/utils": "*",
+        "dotenv": "^17.4.2",
         "next": "^16.2.4",
         "react": "^19.2.5",
         "react-dom": "^19.2.5",
@@ -43,8 +44,8 @@
       "dependencies": {
         "@anthropic-ai/sdk": "^0.92.0",
         "@aws-sdk/client-s3": "^3.1039.0",
-        "@repo/db": "workspace:*",
-        "@repo/utils": "workspace:*",
+        "@repo/db": "*",
+        "@repo/utils": "*",
         "ioredis": "^5.10.1",
       },
     },
@@ -53,7 +54,7 @@
       "dependencies": {
         "@prisma/adapter-pg": "^7.8.0",
         "@prisma/client": "^7.8.0",
-        "@repo/utils": "workspace:*",
+        "@repo/utils": "*",
         "pg": "^8.20.0",
         "prisma": "^7.8.0",
       },
@@ -64,7 +65,7 @@
     "packages/queue": {
       "name": "@repo/queue",
       "dependencies": {
-        "@repo/utils": "workspace:*",
+        "@repo/utils": "*",
         "bullmq": "^5.76.4",
         "ioredis": "^5.10.1",
       },
