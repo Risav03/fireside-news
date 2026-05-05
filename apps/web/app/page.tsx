@@ -1,9 +1,9 @@
-import { RadioPlayer } from "./radio-player";
+import { BroadcastShell } from "./broadcast/broadcast-shell";
 
 export default function Home() {
   return (
-    <main className="min-h-screen">
-      <RadioPlayer />
+    <main>
+      <BroadcastShell />
     </main>
   );
 }

@@ -5,6 +5,7 @@ import type { NewsCategory, NowPlayingResponse, TimelineSegment, TimelineState }
 const WINDOW_SEC = 60 * 60;
 const LOOKAHEAD_COUNT = 6;
 const RECENT_PLAY_TTL_SEC = 30 * 60;
+const GAP_BETWEEN_SEGMENTS_MS = 2_000;
 const FALLBACK_STINGER: TimelineSegment = {
   audioId: "station-fallback",
   durationSec: 8,
@@ -14,6 +15,8 @@ const FALLBACK_STINGER: TimelineSegment = {
   category: "station",
   url: "/api/fallback-audio",
   sourceUrl: null,
+  priority: 0,
+  publishedAt: null,
 };
 
 export function timelineStartKey(channelId: string) {
@@ -71,7 +74,7 @@ export async function getNowPlaying(input: {
   const nowMs = now.getTime();
   const activeIndex = findActiveSegmentIndex(state.segments, nowMs);
   const segment = state.segments[activeIndex] ?? state.segments[0];
-  const offsetSec = Math.max(0, Math.floor((nowMs - segment.startedAt) / 1_000));
+  const offsetSec = Math.min(segment.durationSec, Math.max(0, Math.floor((nowMs - segment.startedAt) / 1_000)));
   const remainingSec = Math.max(0, segment.durationSec - offsetSec);
 
   return {
@@ -102,6 +105,8 @@ async function readTimeline(redis: Redis, channelId: string): Promise<TimelineSt
     segments: segments.map((segment) => ({
       ...segment,
       sourceUrl: segment.sourceUrl ?? null,
+      priority: segment.priority ?? 0,
+      publishedAt: segment.publishedAt ?? null,
     })),
   };
 }
@@ -137,6 +142,10 @@ async function loadTimelineAudio(prisma: PrismaClient, recentPlayed: Set<string>
     category: row.content?.article.category ?? "station",
     url: row.url,
     sourceUrl: row.content?.article.url ?? null,
+    priority: row.content?.priority ?? 0,
+    publishedAt: row.content?.article.publishedAt
+      ? row.content.article.publishedAt.getTime()
+      : null,
   }));
 }
 
@@ -157,7 +166,7 @@ function fillTimeline(startTime: number, candidates: TimelineSegment[]): Timelin
       const segment = stampSegment(bulletin ?? FALLBACK_STINGER, cursor);
       segments.push(segment);
       used.add(segment.audioId);
-      cursor += segment.durationSec * 1_000;
+      cursor += segment.durationSec * 1_000 + GAP_BETWEEN_SEGMENTS_MS;
       continue;
     }
 
@@ -166,7 +175,7 @@ function fillTimeline(startTime: number, candidates: TimelineSegment[]): Timelin
     const segment = stampSegment(next, cursor);
     segments.push(segment);
     used.add(segment.audioId);
-    cursor += segment.durationSec * 1_000;
+    cursor += segment.durationSec * 1_000 + GAP_BETWEEN_SEGMENTS_MS;
     categoryIndex += 1;
   }
 
@@ -205,10 +214,21 @@ function ceilToHour(epochMs: number): number {
 
 function findActiveSegmentIndex(segments: TimelineSegment[], epochMs: number): number {
   const index = segments.findIndex((segment) => epochMs >= segment.startedAt && epochMs < segment.startedAt + segment.durationSec * 1_000);
-  return index >= 0 ? index : 0;
+  if (index >= 0) {
+    return index;
+  }
+
+  // If we're inside an intentional gap between two segments, keep the previous segment active.
+  for (let i = segments.length - 1; i >= 0; i -= 1) {
+    if (segments[i] && segments[i].startedAt <= epochMs) {
+      return i;
+    }
+  }
+
+  return 0;
 }
 
 function timelineEndsBefore(state: TimelineState, epochMs: number): boolean {
   const last = state.segments.at(-1);
-  return !last || last.startedAt + last.durationSec * 1_000 < epochMs;
+  return !last || last.startedAt + last.durationSec * 1_000 + GAP_BETWEEN_SEGMENTS_MS < epochMs;
 }

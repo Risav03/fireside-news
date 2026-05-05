@@ -28,6 +28,10 @@ export type TimelineSegment = {
   url: string;
   /** Original article URL when this segment is a headline tied to an Article */
   sourceUrl: string | null;
+  /** From Content.priority when segment is headline audio; 0 for station/bulletin */
+  priority: number;
+  /** Article published time (epoch ms) when tied to content; null otherwise */
+  publishedAt: number | null;
 };
 
 export type TimelineState = {
