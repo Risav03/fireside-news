@@ -28,6 +28,11 @@ import {
 import { optionalEnv } from "@repo/utils";
 
 const channelId = optionalEnv("CHANNEL_ID", "main");
+/** BullMQ default lock is 30s; LLM + multi-chunk TTS jobs exceed that and appear as "stalled". */
+const PROCESSING_LOCK_MS = 15 * 60 * 1_000;
+const MEDIA_LOCK_MS = 30 * 60 * 1_000;
+const STANDARD_LOCK_MS = 5 * 60 * 1_000;
+
 const queues = createQueues();
 const anthropic = createAnthropicClient();
 const timelineRedis = createRedisConnection();
@@ -55,7 +60,13 @@ const ingestionWorker = new Worker(
 
     throw new Error(`Unknown ingestion job: ${job.name}`);
   },
-  { connection: createRedisConnection({ blocking: true }), concurrency: 2 },
+  {
+    connection: createRedisConnection({ blocking: true }),
+    concurrency: 2,
+    lockDuration: STANDARD_LOCK_MS,
+    stalledInterval: 60_000,
+    maxStalledCount: 5,
+  },
 );
 
 const processingWorker = new Worker(
@@ -105,7 +116,13 @@ const processingWorker = new Worker(
 
     throw new Error(`Unknown processing job: ${job.name}`);
   },
-  { connection: createRedisConnection({ blocking: true }), concurrency: 2 },
+  {
+    connection: createRedisConnection({ blocking: true }),
+    concurrency: 2,
+    lockDuration: PROCESSING_LOCK_MS,
+    stalledInterval: 60_000,
+    maxStalledCount: 5,
+  },
 );
 
 const mediaWorker = new Worker(
@@ -123,7 +140,13 @@ const mediaWorker = new Worker(
 
     return { audioId: await generateAudioForBulletin(prisma, data.bulletinId) };
   },
-  { connection: createRedisConnection({ blocking: true }), concurrency: 1 },
+  {
+    connection: createRedisConnection({ blocking: true }),
+    concurrency: 1,
+    lockDuration: MEDIA_LOCK_MS,
+    stalledInterval: 60_000,
+    maxStalledCount: 5,
+  },
 );
 
 const timelineWorker = new Worker(
@@ -140,7 +163,13 @@ const timelineWorker = new Worker(
       channelId: data.channelId,
     });
   },
-  { connection: createRedisConnection({ blocking: true }), concurrency: 1 },
+  {
+    connection: createRedisConnection({ blocking: true }),
+    concurrency: 1,
+    lockDuration: STANDARD_LOCK_MS,
+    stalledInterval: 60_000,
+    maxStalledCount: 5,
+  },
 );
 
 const workers = [

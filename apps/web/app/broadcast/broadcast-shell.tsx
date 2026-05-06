@@ -102,8 +102,8 @@ export function BroadcastShell() {
       <Ticker headlines={headlines} error={headlineError} />
       <MarketsCrawl available={markets.available} items={markets.items} message={markets.message ?? "Markets feed offline"} />
 
-      <audio ref={primaryRef} />
-      <audio ref={secondaryRef} />
+      <audio ref={primaryRef} preload="auto" playsInline />
+      <audio ref={secondaryRef} preload="auto" playsInline />
       <audio ref={musicRef} src="/api/fallback-audio?kind=bed" loop preload="auto" />
     </div>
   );

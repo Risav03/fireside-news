@@ -72,14 +72,12 @@ export function useRadioPlayback() {
   const syncVersionRef = useRef(0);
   const transitionVersionRef = useRef(0);
   const fadeVersionsRef = useRef(new WeakMap<HTMLAudioElement, number>());
-  const audioGraphRef = useRef<{
-    ctx: AudioContext;
-    analyser: AnalyserNode;
-    connected: boolean;
-  } | null>(null);
+  /** Waveform scene only — headline `<audio>` stays on native output (Web Audio MediaElementSource + suspended AudioContext caused silent playback). */
   const analyserRef = useRef<AnalyserNode | null>(null);
 
   const [payload, setPayload] = useState<NowPlayingResponse | null>(null);
+  /** Advances UI progress between `/api/now-playing` polls (offsetSec is server snapshot only). */
+  const [progressClock, setProgressClock] = useState(0);
   const [status, setStatus] = useState<PlaybackStatus>("idle");
   const [error, setError] = useState<string | null>(null);
   const activeSegmentId = payload?.currentAudio.audioId;
@@ -90,37 +88,8 @@ export function useRadioPlayback() {
     stopAudio(musicRef.current, fadeVersionsRef.current);
   }, []);
 
-  const ensureAudioGraph = useCallback(() => {
-    const primary = primaryRef.current;
-    const secondary = secondaryRef.current;
-    if (!primary || !secondary || audioGraphRef.current?.connected) {
-      return audioGraphRef.current;
-    }
-
-    try {
-      const ctx = new AudioContext();
-      const analyser = ctx.createAnalyser();
-      analyser.fftSize = 128;
-      const src1 = ctx.createMediaElementSource(primary);
-      const src2 = ctx.createMediaElementSource(secondary);
-      src1.connect(analyser);
-      src2.connect(analyser);
-      analyser.connect(ctx.destination);
-      audioGraphRef.current = { ctx, analyser, connected: true };
-      analyserRef.current = analyser;
-    } catch {
-      audioGraphRef.current = null;
-      analyserRef.current = null;
-    }
-
-    return audioGraphRef.current;
-  }, []);
-
   const playSegment = useCallback(
     async (nextPayload: NowPlayingResponse, manualStart: boolean, syncVersion: number) => {
-      ensureAudioGraph();
-      await audioGraphRef.current?.ctx.resume().catch(() => undefined);
-
       const transitionVersion = transitionVersionRef.current + 1;
       transitionVersionRef.current = transitionVersion;
       const audioElements = [primaryRef.current, secondaryRef.current] as const;
@@ -170,7 +139,7 @@ export function useRadioPlayback() {
         setStatus("blocked");
       }
     },
-    [ensureAudioGraph, stopAllAudio],
+    [stopAllAudio],
   );
 
   const syncPlayback = useCallback(
@@ -235,9 +204,18 @@ export function useRadioPlayback() {
 
   useEffect(() => {
     void syncPlayback();
+    const rafId = requestAnimationFrame(() => void syncPlayback());
     const interval = window.setInterval(() => void syncPlayback(), 5_000);
-    return () => window.clearInterval(interval);
+    return () => {
+      cancelAnimationFrame(rafId);
+      window.clearInterval(interval);
+    };
   }, [syncPlayback]);
+
+  useEffect(() => {
+    const id = window.setInterval(() => setProgressClock(Date.now()), 250);
+    return () => window.clearInterval(id);
+  }, []);
 
   useEffect(() => {
     if (!payload?.nextAudio[0]) {
@@ -266,8 +244,17 @@ export function useRadioPlayback() {
       return 0;
     }
 
-    return Math.min(100, Math.round((payload.currentAudio.offsetSec / payload.currentAudio.durationSec) * 100));
-  }, [payload]);
+    const { offsetSec, durationSec } = payload.currentAudio;
+    if (durationSec <= 0) {
+      return 0;
+    }
+
+    const serverSkewMs = Date.now() - payload.serverTime;
+    const elapsedSec = offsetSec + serverSkewMs / 1_000;
+    const clamped = Math.max(0, Math.min(durationSec, elapsedSec));
+
+    return Math.min(100, (clamped / durationSec) * 100);
+  }, [payload, progressClock]);
 
   return {
     primaryRef,
