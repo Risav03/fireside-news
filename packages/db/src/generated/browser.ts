@@ -28,12 +28,7 @@ export type Article = Prisma.ArticleModel
  */
 export type Content = Prisma.ContentModel
 /**
- * Model Bulletin
- * 
+ * Model SyncState
+ * Singleton row (id = "default") for ingestion rate limiting without Redis.
  */
-export type Bulletin = Prisma.BulletinModel
-/**
- * Model Audio
- * 
- */
-export type Audio = Prisma.AudioModel
+export type SyncState = Prisma.SyncStateModel

@@ -1,20 +1,19 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { PrismaClient } from "@repo/db";
 import { clamp, requireEnv } from "@repo/utils";
-import { estimateSpokenDurationSec, truncateToMaxWords } from "./text";
+import { truncateToMaxWords } from "./text";
 import type { ProcessedContent } from "./types";
 
-const MAX_SUMMARY_WORDS = 500;
+const MAX_SUMMARY_WORDS = 60;
 
 const ANCHOR_SYSTEM_PROMPT =
-  "You are a professional news editor. Write clear, factual news copy without markdown. The headline must be a single punchy line suitable for reading aloud; the summary may be longer prose but must stay within the word limit given in the user message.";
+  "You are a professional news editor. Write clear, factual news copy without markdown. Headline is one concise line for on-screen display. Summary is brief prose readers skim in seconds—no bullets.";
 const ANTHROPIC_MODEL = "claude-haiku-4-5";
 const SUMMARY_TOOL_NAME = "record_processed_news";
 
 const SUMMARY_TOOL = {
   name: SUMMARY_TOOL_NAME,
-  description:
-    `Return the processed news copy for a single article. Use this exactly once with a headline, a summary of at most ${MAX_SUMMARY_WORDS} words, and an importance score.`,
+  description: `Return the processed news copy for a single article. Use this exactly once with a headline, a summary of at most ${MAX_SUMMARY_WORDS} words, and an importance score.`,
   input_schema: {
     type: "object" as const,
     additionalProperties: false,
@@ -49,7 +48,7 @@ export async function summarizeArticle(
     messages: [
       {
         role: "user",
-        content: `Create a news headline and summary for this item.\n\nTitle: ${input.title}\nSource: ${input.source}\nContent: ${input.content}\n\nHeadline: one concise line, suitable to read aloud.\nSummary: plain prose, at most ${MAX_SUMMARY_WORDS} words, no bullet lists.\nImportance: integer from 1 to 100.`,
+        content: `Create a news headline and very brief summary for this item.\n\nTitle: ${input.title}\nSource: ${input.source}\nContent: ${input.content}\n\nHeadline: one concise line.\nSummary: plain prose, at most ${MAX_SUMMARY_WORDS} words, no bullet lists.\nImportance: integer from 1 to 100.`,
       },
     ],
   });
@@ -87,7 +86,6 @@ export async function processArticles(prisma: PrismaClient, anthropic: Anthropic
   for (const article of articles) {
     const processed = await summarizeArticle(anthropic, article);
     const text = `${processed.headline}. ${processed.summary}`;
-    const durationSec = estimateSpokenDurationSec(text);
 
     const content = await prisma.content.create({
       data: {
@@ -96,7 +94,6 @@ export async function processArticles(prisma: PrismaClient, anthropic: Anthropic
         summary: processed.summary,
         text,
         priority: processed.priority,
-        bulletinCandidate: processed.priority >= 35 && durationSec <= 30,
       },
     });
 
@@ -113,46 +110,6 @@ export async function processArticles(prisma: PrismaClient, anthropic: Anthropic
   }
 
   return contentIds;
-}
-
-export async function generateBulletinScript(
-  prisma: PrismaClient,
-  anthropic: Anthropic,
-  scheduledForHour = new Date(),
-): Promise<string> {
-  const content = await prisma.content.findMany({
-    where: {
-      bulletinCandidate: true,
-      createdAt: {
-        gte: new Date(Date.now() - 6 * 60 * 60 * 1_000),
-      },
-    },
-    orderBy: [{ priority: "desc" }, { createdAt: "desc" }],
-    take: 10,
-    include: {
-      article: true,
-    },
-  });
-
-  const response = await anthropic.messages.create({
-    model: ANTHROPIC_MODEL,
-    max_tokens: 4_000,
-    system: ANCHOR_SYSTEM_PROMPT,
-    messages: [
-      {
-        role: "user",
-        content: `Generate a concise hourly AI news radio bulletin for ${scheduledForHour.toISOString()}.\n\nFormat: Intro, Headlines, Summaries, Outro. Keep it around 8 to 10 minutes if enough stories exist; otherwise keep it concise and complete.\n\nItems:\n${content
-          .map((item, index) => `${index + 1}. [${item.article.category}] ${item.headline} - ${item.summary}`)
-          .join("\n")}`,
-      },
-    ],
-  });
-
-  return response.content
-    .filter((block) => block.type === "text")
-    .map((block) => block.text)
-    .join("\n")
-    .trim();
 }
 
 function parseSummaryToolInput(input: unknown) {

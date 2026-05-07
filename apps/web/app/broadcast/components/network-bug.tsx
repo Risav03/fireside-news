@@ -1,16 +1,21 @@
 "use client";
 
-import type { PlaybackStatus } from "../use-radio-playback";
-
 export function NetworkBug({
-  live,
-  status,
-  onUnmute,
+  lastUpdatedAt,
+  onRefreshPress,
 }: {
-  live: boolean;
-  status: PlaybackStatus;
-  onUnmute: () => void;
+  lastUpdatedAt: Date | null;
+  onRefreshPress: () => void;
 }) {
+  const formatted =
+    lastUpdatedAt === null
+      ? "Waiting for headlines…"
+      : new Intl.DateTimeFormat(undefined, {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        }).format(lastUpdatedAt);
+
   return (
     <div className="netbug">
       <div className="netbug__mark">
@@ -32,21 +37,22 @@ export function NetworkBug({
         <div className="netbug__name">FIRESIDE</div>
         <div className="netbug__sub">NEWS NETWORK</div>
       </div>
-      <div style={{ marginLeft: "auto" }}>
-        {status === "blocked" ? (
-          <button
-            type="button"
-            className="netbug__live"
-            style={{ cursor: "pointer", border: "none", font: "inherit" }}
-            onClick={() => onUnmute()}
-          >
-            TAP TO LISTEN
-          </button>
-        ) : live ? (
-          <div className="netbug__live">
-            <span className="dot" /> LIVE
-          </div>
-        ) : null}
+      <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "12px" }}>
+        <div className="netbug__live" title="Headlines fetched from database">
+          <span className="dot" />
+          HEADLINES
+        </div>
+        <div className="muted" style={{ fontSize: "12px", textAlign: "right" }}>
+          Updated {formatted}
+        </div>
+        <button
+          type="button"
+          className="netbug__live"
+          style={{ cursor: "pointer", border: "none", font: "inherit", background: "transparent" }}
+          onClick={() => onRefreshPress()}
+        >
+          FETCH NOW
+        </button>
       </div>
     </div>
   );

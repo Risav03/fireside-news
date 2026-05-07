@@ -386,8 +386,7 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 export const ModelName = {
   Article: 'Article',
   Content: 'Content',
-  Bulletin: 'Bulletin',
-  Audio: 'Audio'
+  SyncState: 'SyncState'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -403,7 +402,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "article" | "content" | "bulletin" | "audio"
+    modelProps: "article" | "content" | "syncState"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -555,151 +554,77 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
-    Bulletin: {
-      payload: Prisma.$BulletinPayload<ExtArgs>
-      fields: Prisma.BulletinFieldRefs
+    SyncState: {
+      payload: Prisma.$SyncStatePayload<ExtArgs>
+      fields: Prisma.SyncStateFieldRefs
       operations: {
         findUnique: {
-          args: Prisma.BulletinFindUniqueArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$BulletinPayload> | null
+          args: Prisma.SyncStateFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SyncStatePayload> | null
         }
         findUniqueOrThrow: {
-          args: Prisma.BulletinFindUniqueOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$BulletinPayload>
+          args: Prisma.SyncStateFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SyncStatePayload>
         }
         findFirst: {
-          args: Prisma.BulletinFindFirstArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$BulletinPayload> | null
+          args: Prisma.SyncStateFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SyncStatePayload> | null
         }
         findFirstOrThrow: {
-          args: Prisma.BulletinFindFirstOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$BulletinPayload>
+          args: Prisma.SyncStateFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SyncStatePayload>
         }
         findMany: {
-          args: Prisma.BulletinFindManyArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$BulletinPayload>[]
+          args: Prisma.SyncStateFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SyncStatePayload>[]
         }
         create: {
-          args: Prisma.BulletinCreateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$BulletinPayload>
+          args: Prisma.SyncStateCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SyncStatePayload>
         }
         createMany: {
-          args: Prisma.BulletinCreateManyArgs<ExtArgs>
+          args: Prisma.SyncStateCreateManyArgs<ExtArgs>
           result: BatchPayload
         }
         createManyAndReturn: {
-          args: Prisma.BulletinCreateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$BulletinPayload>[]
+          args: Prisma.SyncStateCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SyncStatePayload>[]
         }
         delete: {
-          args: Prisma.BulletinDeleteArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$BulletinPayload>
+          args: Prisma.SyncStateDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SyncStatePayload>
         }
         update: {
-          args: Prisma.BulletinUpdateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$BulletinPayload>
+          args: Prisma.SyncStateUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SyncStatePayload>
         }
         deleteMany: {
-          args: Prisma.BulletinDeleteManyArgs<ExtArgs>
+          args: Prisma.SyncStateDeleteManyArgs<ExtArgs>
           result: BatchPayload
         }
         updateMany: {
-          args: Prisma.BulletinUpdateManyArgs<ExtArgs>
+          args: Prisma.SyncStateUpdateManyArgs<ExtArgs>
           result: BatchPayload
         }
         updateManyAndReturn: {
-          args: Prisma.BulletinUpdateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$BulletinPayload>[]
+          args: Prisma.SyncStateUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SyncStatePayload>[]
         }
         upsert: {
-          args: Prisma.BulletinUpsertArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$BulletinPayload>
+          args: Prisma.SyncStateUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SyncStatePayload>
         }
         aggregate: {
-          args: Prisma.BulletinAggregateArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AggregateBulletin>
+          args: Prisma.SyncStateAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateSyncState>
         }
         groupBy: {
-          args: Prisma.BulletinGroupByArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.BulletinGroupByOutputType>[]
+          args: Prisma.SyncStateGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.SyncStateGroupByOutputType>[]
         }
         count: {
-          args: Prisma.BulletinCountArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.BulletinCountAggregateOutputType> | number
-        }
-      }
-    }
-    Audio: {
-      payload: Prisma.$AudioPayload<ExtArgs>
-      fields: Prisma.AudioFieldRefs
-      operations: {
-        findUnique: {
-          args: Prisma.AudioFindUniqueArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$AudioPayload> | null
-        }
-        findUniqueOrThrow: {
-          args: Prisma.AudioFindUniqueOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$AudioPayload>
-        }
-        findFirst: {
-          args: Prisma.AudioFindFirstArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$AudioPayload> | null
-        }
-        findFirstOrThrow: {
-          args: Prisma.AudioFindFirstOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$AudioPayload>
-        }
-        findMany: {
-          args: Prisma.AudioFindManyArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$AudioPayload>[]
-        }
-        create: {
-          args: Prisma.AudioCreateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$AudioPayload>
-        }
-        createMany: {
-          args: Prisma.AudioCreateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        createManyAndReturn: {
-          args: Prisma.AudioCreateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$AudioPayload>[]
-        }
-        delete: {
-          args: Prisma.AudioDeleteArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$AudioPayload>
-        }
-        update: {
-          args: Prisma.AudioUpdateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$AudioPayload>
-        }
-        deleteMany: {
-          args: Prisma.AudioDeleteManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateMany: {
-          args: Prisma.AudioUpdateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateManyAndReturn: {
-          args: Prisma.AudioUpdateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$AudioPayload>[]
-        }
-        upsert: {
-          args: Prisma.AudioUpsertArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$AudioPayload>
-        }
-        aggregate: {
-          args: Prisma.AudioAggregateArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AggregateAudio>
-        }
-        groupBy: {
-          args: Prisma.AudioGroupByArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AudioGroupByOutputType>[]
-        }
-        count: {
-          args: Prisma.AudioCountArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AudioCountAggregateOutputType> | number
+          args: Prisma.SyncStateCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.SyncStateCountAggregateOutputType> | number
         }
       }
     }
@@ -767,7 +692,6 @@ export const ContentScalarFieldEnum = {
   summary: 'summary',
   text: 'text',
   priority: 'priority',
-  bulletinCandidate: 'bulletinCandidate',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -775,30 +699,13 @@ export const ContentScalarFieldEnum = {
 export type ContentScalarFieldEnum = (typeof ContentScalarFieldEnum)[keyof typeof ContentScalarFieldEnum]
 
 
-export const BulletinScalarFieldEnum = {
+export const SyncStateScalarFieldEnum = {
   id: 'id',
-  script: 'script',
-  durationSec: 'durationSec',
-  scheduledForHour: 'scheduledForHour',
-  createdAt: 'createdAt',
+  lastIngestAt: 'lastIngestAt',
   updatedAt: 'updatedAt'
 } as const
 
-export type BulletinScalarFieldEnum = (typeof BulletinScalarFieldEnum)[keyof typeof BulletinScalarFieldEnum]
-
-
-export const AudioScalarFieldEnum = {
-  id: 'id',
-  contentId: 'contentId',
-  bulletinId: 'bulletinId',
-  url: 'url',
-  durationSec: 'durationSec',
-  type: 'type',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-} as const
-
-export type AudioScalarFieldEnum = (typeof AudioScalarFieldEnum)[keyof typeof AudioScalarFieldEnum]
+export type SyncStateScalarFieldEnum = (typeof SyncStateScalarFieldEnum)[keyof typeof SyncStateScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -898,27 +805,6 @@ export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'In
  * Reference to a field of type 'Int[]'
  */
 export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
-    
-
-
-/**
- * Reference to a field of type 'Boolean'
- */
-export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
-    
-
-
-/**
- * Reference to a field of type 'AudioType'
- */
-export type EnumAudioTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AudioType'>
-    
-
-
-/**
- * Reference to a field of type 'AudioType[]'
- */
-export type ListEnumAudioTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AudioType[]'>
     
 
 
@@ -1047,8 +933,7 @@ export type PrismaClientOptions = ({
 export type GlobalOmitConfig = {
   article?: Prisma.ArticleOmit
   content?: Prisma.ContentOmit
-  bulletin?: Prisma.BulletinOmit
-  audio?: Prisma.AudioOmit
+  syncState?: Prisma.SyncStateOmit
 }
 
 /* Types for Logging */

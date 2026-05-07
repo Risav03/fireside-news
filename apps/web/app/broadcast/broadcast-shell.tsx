@@ -1,6 +1,5 @@
 "use client";
 
-import type { NowPlayingResponse } from "@repo/core";
 import { useMemo } from "react";
 import { BroadcastSettingsPopover } from "./components/broadcast-settings";
 import { MarketsCrawl } from "./components/markets-crawl";
@@ -14,44 +13,18 @@ import { useBroadcastSettings } from "./use-broadcast-settings";
 import { useClock } from "./use-clock";
 import { useHeadlines } from "./use-headlines";
 import { useMarkets } from "./use-markets";
-import { useRadioPlayback } from "./use-radio-playback";
-
-const FALLBACK_CURRENT: NowPlayingResponse["currentAudio"] = {
-  audioId: "pending",
-  durationSec: 1,
-  startedAt: Date.now(),
-  type: "stinger",
-  title: "Preparing the live timeline…",
-  category: "station",
-  url: "",
-  sourceUrl: null,
-  priority: 0,
-  publishedAt: null,
-  offsetSec: 0,
-  remainingSec: 1,
-};
+import { useRotatingHeadlines } from "./use-rotating-headlines";
 
 export function BroadcastShell() {
   const now = useClock();
   const { settings, update } = useBroadcastSettings();
-  const {
-    primaryRef,
-    secondaryRef,
-    musicRef,
-    payload,
-    status,
-    error,
-    progress,
-    syncPlayback,
-    analyserRef,
-  } = useRadioPlayback();
-  const { headlines, headlineError } = useHeadlines();
+  const { headlines, headlineError, lastFetchedAt, refreshNow } = useHeadlines();
   const markets = useMarkets();
 
-  const current = payload?.currentAudio ?? FALLBACK_CURRENT;
+  const { current: spotlight, progress, index } = useRotatingHeadlines(headlines, 10_000);
 
   const breaking = useMemo(() => {
-    const p = current.priority ?? 0;
+    const p = spotlight?.priority ?? 0;
     if (settings.breakingMode === "off") {
       return false;
     }
@@ -59,13 +32,19 @@ export function BroadcastShell() {
       return true;
     }
     return p >= 8;
-  }, [current.priority, settings.breakingMode]);
-
-  const playbackOk = status === "playing" && error === null;
+  }, [spotlight?.priority, settings.breakingMode]);
 
   const shellStyle = {
     ["--brand" as string]: settings.networkColor,
   } as React.CSSProperties;
+
+  const rundownItems = useMemo(() => {
+    if (headlines.length === 0) {
+      return headlines;
+    }
+    const i = index % headlines.length;
+    return [...headlines.slice(i), ...headlines.slice(0, i)];
+  }, [headlines, index]);
 
   return (
     <div className="broadcast" data-screen-label="01 Broadcast" data-skin={settings.skin} style={shellStyle}>
@@ -74,37 +53,28 @@ export function BroadcastShell() {
         rightSlot={<BroadcastSettingsPopover settings={settings} onChange={update} />}
       />
 
-      {error || headlineError ? (
-        <div className={`broadcast-status ${error ? "broadcast-status--error" : ""}`}>
-          {[error, headlineError].filter(Boolean).join(" · ")}
+      {headlineError ? (
+        <div className="broadcast-status broadcast-status--error">
+          {[headlineError].filter(Boolean).join(" · ")}
         </div>
       ) : null}
 
       <div className="main">
         <div className="main__left">
-          <NetworkBug
-            live={status === "playing"}
-            status={status}
-            onUnmute={() => void syncPlayback(true)}
-          />
+          <NetworkBug lastUpdatedAt={lastFetchedAt} onRefreshPress={() => void refreshNow()} />
           <StudioStage
-            current={current}
+            spotlight={spotlight}
             breaking={breaking}
             anchorMode={settings.anchorMode}
-            progress={payload ? progress : 0}
+            rotationProgress={progress}
             now={now}
-            analyserRef={analyserRef}
           />
         </div>
-        <Rundown nextAudio={payload?.nextAudio ?? []} playbackOk={playbackOk} />
+        <Rundown headlines={rundownItems} />
       </div>
 
       <Ticker headlines={headlines} error={headlineError} />
       <MarketsCrawl available={markets.available} items={markets.items} message={markets.message ?? "Markets feed offline"} />
-
-      <audio ref={primaryRef} preload="auto" playsInline />
-      <audio ref={secondaryRef} preload="auto" playsInline />
-      <audio ref={musicRef} src="/api/fallback-audio?kind=bed" loop preload="auto" />
     </div>
   );
 }

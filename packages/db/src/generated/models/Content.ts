@@ -42,7 +42,6 @@ export type ContentMinAggregateOutputType = {
   summary: string | null
   text: string | null
   priority: number | null
-  bulletinCandidate: boolean | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -55,7 +54,6 @@ export type ContentMaxAggregateOutputType = {
   summary: string | null
   text: string | null
   priority: number | null
-  bulletinCandidate: boolean | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -68,7 +66,6 @@ export type ContentCountAggregateOutputType = {
   summary: number
   text: number
   priority: number
-  bulletinCandidate: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -91,7 +88,6 @@ export type ContentMinAggregateInputType = {
   summary?: true
   text?: true
   priority?: true
-  bulletinCandidate?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -104,7 +100,6 @@ export type ContentMaxAggregateInputType = {
   summary?: true
   text?: true
   priority?: true
-  bulletinCandidate?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -117,7 +112,6 @@ export type ContentCountAggregateInputType = {
   summary?: true
   text?: true
   priority?: true
-  bulletinCandidate?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -217,7 +211,6 @@ export type ContentGroupByOutputType = {
   summary: string
   text: string
   priority: number
-  bulletinCandidate: boolean
   createdAt: Date
   updatedAt: Date
   _count: ContentCountAggregateOutputType | null
@@ -253,11 +246,9 @@ export type ContentWhereInput = {
   summary?: Prisma.StringFilter<"Content"> | string
   text?: Prisma.StringFilter<"Content"> | string
   priority?: Prisma.IntFilter<"Content"> | number
-  bulletinCandidate?: Prisma.BoolFilter<"Content"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Content"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Content"> | Date | string
   article?: Prisma.XOR<Prisma.ArticleScalarRelationFilter, Prisma.ArticleWhereInput>
-  audio?: Prisma.AudioListRelationFilter
 }
 
 export type ContentOrderByWithRelationInput = {
@@ -268,11 +259,9 @@ export type ContentOrderByWithRelationInput = {
   summary?: Prisma.SortOrder
   text?: Prisma.SortOrder
   priority?: Prisma.SortOrder
-  bulletinCandidate?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   article?: Prisma.ArticleOrderByWithRelationInput
-  audio?: Prisma.AudioOrderByRelationAggregateInput
 }
 
 export type ContentWhereUniqueInput = Prisma.AtLeast<{
@@ -286,11 +275,9 @@ export type ContentWhereUniqueInput = Prisma.AtLeast<{
   summary?: Prisma.StringFilter<"Content"> | string
   text?: Prisma.StringFilter<"Content"> | string
   priority?: Prisma.IntFilter<"Content"> | number
-  bulletinCandidate?: Prisma.BoolFilter<"Content"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Content"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Content"> | Date | string
   article?: Prisma.XOR<Prisma.ArticleScalarRelationFilter, Prisma.ArticleWhereInput>
-  audio?: Prisma.AudioListRelationFilter
 }, "id">
 
 export type ContentOrderByWithAggregationInput = {
@@ -301,7 +288,6 @@ export type ContentOrderByWithAggregationInput = {
   summary?: Prisma.SortOrder
   text?: Prisma.SortOrder
   priority?: Prisma.SortOrder
-  bulletinCandidate?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.ContentCountOrderByAggregateInput
@@ -322,7 +308,6 @@ export type ContentScalarWhereWithAggregatesInput = {
   summary?: Prisma.StringWithAggregatesFilter<"Content"> | string
   text?: Prisma.StringWithAggregatesFilter<"Content"> | string
   priority?: Prisma.IntWithAggregatesFilter<"Content"> | number
-  bulletinCandidate?: Prisma.BoolWithAggregatesFilter<"Content"> | boolean
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Content"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Content"> | Date | string
 }
@@ -334,11 +319,9 @@ export type ContentCreateInput = {
   summary: string
   text: string
   priority: number
-  bulletinCandidate?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   article: Prisma.ArticleCreateNestedOneWithoutContentsInput
-  audio?: Prisma.AudioCreateNestedManyWithoutContentInput
 }
 
 export type ContentUncheckedCreateInput = {
@@ -349,10 +332,8 @@ export type ContentUncheckedCreateInput = {
   summary: string
   text: string
   priority: number
-  bulletinCandidate?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
-  audio?: Prisma.AudioUncheckedCreateNestedManyWithoutContentInput
 }
 
 export type ContentUpdateInput = {
@@ -362,11 +343,9 @@ export type ContentUpdateInput = {
   summary?: Prisma.StringFieldUpdateOperationsInput | string
   text?: Prisma.StringFieldUpdateOperationsInput | string
   priority?: Prisma.IntFieldUpdateOperationsInput | number
-  bulletinCandidate?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   article?: Prisma.ArticleUpdateOneRequiredWithoutContentsNestedInput
-  audio?: Prisma.AudioUpdateManyWithoutContentNestedInput
 }
 
 export type ContentUncheckedUpdateInput = {
@@ -377,10 +356,8 @@ export type ContentUncheckedUpdateInput = {
   summary?: Prisma.StringFieldUpdateOperationsInput | string
   text?: Prisma.StringFieldUpdateOperationsInput | string
   priority?: Prisma.IntFieldUpdateOperationsInput | number
-  bulletinCandidate?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  audio?: Prisma.AudioUncheckedUpdateManyWithoutContentNestedInput
 }
 
 export type ContentCreateManyInput = {
@@ -391,7 +368,6 @@ export type ContentCreateManyInput = {
   summary: string
   text: string
   priority: number
-  bulletinCandidate?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -403,7 +379,6 @@ export type ContentUpdateManyMutationInput = {
   summary?: Prisma.StringFieldUpdateOperationsInput | string
   text?: Prisma.StringFieldUpdateOperationsInput | string
   priority?: Prisma.IntFieldUpdateOperationsInput | number
-  bulletinCandidate?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -416,7 +391,6 @@ export type ContentUncheckedUpdateManyInput = {
   summary?: Prisma.StringFieldUpdateOperationsInput | string
   text?: Prisma.StringFieldUpdateOperationsInput | string
   priority?: Prisma.IntFieldUpdateOperationsInput | number
-  bulletinCandidate?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -439,7 +413,6 @@ export type ContentCountOrderByAggregateInput = {
   summary?: Prisma.SortOrder
   text?: Prisma.SortOrder
   priority?: Prisma.SortOrder
-  bulletinCandidate?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -456,7 +429,6 @@ export type ContentMaxOrderByAggregateInput = {
   summary?: Prisma.SortOrder
   text?: Prisma.SortOrder
   priority?: Prisma.SortOrder
-  bulletinCandidate?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -469,18 +441,12 @@ export type ContentMinOrderByAggregateInput = {
   summary?: Prisma.SortOrder
   text?: Prisma.SortOrder
   priority?: Prisma.SortOrder
-  bulletinCandidate?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
 
 export type ContentSumOrderByAggregateInput = {
   priority?: Prisma.SortOrder
-}
-
-export type ContentNullableScalarRelationFilter = {
-  is?: Prisma.ContentWhereInput | null
-  isNot?: Prisma.ContentWhereInput | null
 }
 
 export type ContentCreateNestedManyWithoutArticleInput = {
@@ -537,26 +503,6 @@ export type IntFieldUpdateOperationsInput = {
   divide?: number
 }
 
-export type BoolFieldUpdateOperationsInput = {
-  set?: boolean
-}
-
-export type ContentCreateNestedOneWithoutAudioInput = {
-  create?: Prisma.XOR<Prisma.ContentCreateWithoutAudioInput, Prisma.ContentUncheckedCreateWithoutAudioInput>
-  connectOrCreate?: Prisma.ContentCreateOrConnectWithoutAudioInput
-  connect?: Prisma.ContentWhereUniqueInput
-}
-
-export type ContentUpdateOneWithoutAudioNestedInput = {
-  create?: Prisma.XOR<Prisma.ContentCreateWithoutAudioInput, Prisma.ContentUncheckedCreateWithoutAudioInput>
-  connectOrCreate?: Prisma.ContentCreateOrConnectWithoutAudioInput
-  upsert?: Prisma.ContentUpsertWithoutAudioInput
-  disconnect?: Prisma.ContentWhereInput | boolean
-  delete?: Prisma.ContentWhereInput | boolean
-  connect?: Prisma.ContentWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.ContentUpdateToOneWithWhereWithoutAudioInput, Prisma.ContentUpdateWithoutAudioInput>, Prisma.ContentUncheckedUpdateWithoutAudioInput>
-}
-
 export type ContentCreateWithoutArticleInput = {
   id?: string
   type?: $Enums.ContentType
@@ -564,10 +510,8 @@ export type ContentCreateWithoutArticleInput = {
   summary: string
   text: string
   priority: number
-  bulletinCandidate?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
-  audio?: Prisma.AudioCreateNestedManyWithoutContentInput
 }
 
 export type ContentUncheckedCreateWithoutArticleInput = {
@@ -577,10 +521,8 @@ export type ContentUncheckedCreateWithoutArticleInput = {
   summary: string
   text: string
   priority: number
-  bulletinCandidate?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
-  audio?: Prisma.AudioUncheckedCreateNestedManyWithoutContentInput
 }
 
 export type ContentCreateOrConnectWithoutArticleInput = {
@@ -620,77 +562,8 @@ export type ContentScalarWhereInput = {
   summary?: Prisma.StringFilter<"Content"> | string
   text?: Prisma.StringFilter<"Content"> | string
   priority?: Prisma.IntFilter<"Content"> | number
-  bulletinCandidate?: Prisma.BoolFilter<"Content"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Content"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Content"> | Date | string
-}
-
-export type ContentCreateWithoutAudioInput = {
-  id?: string
-  type?: $Enums.ContentType
-  headline: string
-  summary: string
-  text: string
-  priority: number
-  bulletinCandidate?: boolean
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  article: Prisma.ArticleCreateNestedOneWithoutContentsInput
-}
-
-export type ContentUncheckedCreateWithoutAudioInput = {
-  id?: string
-  articleId: string
-  type?: $Enums.ContentType
-  headline: string
-  summary: string
-  text: string
-  priority: number
-  bulletinCandidate?: boolean
-  createdAt?: Date | string
-  updatedAt?: Date | string
-}
-
-export type ContentCreateOrConnectWithoutAudioInput = {
-  where: Prisma.ContentWhereUniqueInput
-  create: Prisma.XOR<Prisma.ContentCreateWithoutAudioInput, Prisma.ContentUncheckedCreateWithoutAudioInput>
-}
-
-export type ContentUpsertWithoutAudioInput = {
-  update: Prisma.XOR<Prisma.ContentUpdateWithoutAudioInput, Prisma.ContentUncheckedUpdateWithoutAudioInput>
-  create: Prisma.XOR<Prisma.ContentCreateWithoutAudioInput, Prisma.ContentUncheckedCreateWithoutAudioInput>
-  where?: Prisma.ContentWhereInput
-}
-
-export type ContentUpdateToOneWithWhereWithoutAudioInput = {
-  where?: Prisma.ContentWhereInput
-  data: Prisma.XOR<Prisma.ContentUpdateWithoutAudioInput, Prisma.ContentUncheckedUpdateWithoutAudioInput>
-}
-
-export type ContentUpdateWithoutAudioInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  type?: Prisma.EnumContentTypeFieldUpdateOperationsInput | $Enums.ContentType
-  headline?: Prisma.StringFieldUpdateOperationsInput | string
-  summary?: Prisma.StringFieldUpdateOperationsInput | string
-  text?: Prisma.StringFieldUpdateOperationsInput | string
-  priority?: Prisma.IntFieldUpdateOperationsInput | number
-  bulletinCandidate?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  article?: Prisma.ArticleUpdateOneRequiredWithoutContentsNestedInput
-}
-
-export type ContentUncheckedUpdateWithoutAudioInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  articleId?: Prisma.StringFieldUpdateOperationsInput | string
-  type?: Prisma.EnumContentTypeFieldUpdateOperationsInput | $Enums.ContentType
-  headline?: Prisma.StringFieldUpdateOperationsInput | string
-  summary?: Prisma.StringFieldUpdateOperationsInput | string
-  text?: Prisma.StringFieldUpdateOperationsInput | string
-  priority?: Prisma.IntFieldUpdateOperationsInput | number
-  bulletinCandidate?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type ContentCreateManyArticleInput = {
@@ -700,7 +573,6 @@ export type ContentCreateManyArticleInput = {
   summary: string
   text: string
   priority: number
-  bulletinCandidate?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -712,10 +584,8 @@ export type ContentUpdateWithoutArticleInput = {
   summary?: Prisma.StringFieldUpdateOperationsInput | string
   text?: Prisma.StringFieldUpdateOperationsInput | string
   priority?: Prisma.IntFieldUpdateOperationsInput | number
-  bulletinCandidate?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  audio?: Prisma.AudioUpdateManyWithoutContentNestedInput
 }
 
 export type ContentUncheckedUpdateWithoutArticleInput = {
@@ -725,10 +595,8 @@ export type ContentUncheckedUpdateWithoutArticleInput = {
   summary?: Prisma.StringFieldUpdateOperationsInput | string
   text?: Prisma.StringFieldUpdateOperationsInput | string
   priority?: Prisma.IntFieldUpdateOperationsInput | number
-  bulletinCandidate?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  audio?: Prisma.AudioUncheckedUpdateManyWithoutContentNestedInput
 }
 
 export type ContentUncheckedUpdateManyWithoutArticleInput = {
@@ -738,40 +606,10 @@ export type ContentUncheckedUpdateManyWithoutArticleInput = {
   summary?: Prisma.StringFieldUpdateOperationsInput | string
   text?: Prisma.StringFieldUpdateOperationsInput | string
   priority?: Prisma.IntFieldUpdateOperationsInput | number
-  bulletinCandidate?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
-
-/**
- * Count Type ContentCountOutputType
- */
-
-export type ContentCountOutputType = {
-  audio: number
-}
-
-export type ContentCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  audio?: boolean | ContentCountOutputTypeCountAudioArgs
-}
-
-/**
- * ContentCountOutputType without action
- */
-export type ContentCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the ContentCountOutputType
-   */
-  select?: Prisma.ContentCountOutputTypeSelect<ExtArgs> | null
-}
-
-/**
- * ContentCountOutputType without action
- */
-export type ContentCountOutputTypeCountAudioArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.AudioWhereInput
-}
 
 
 export type ContentSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -782,12 +620,9 @@ export type ContentSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   summary?: boolean
   text?: boolean
   priority?: boolean
-  bulletinCandidate?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   article?: boolean | Prisma.ArticleDefaultArgs<ExtArgs>
-  audio?: boolean | Prisma.Content$audioArgs<ExtArgs>
-  _count?: boolean | Prisma.ContentCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["content"]>
 
 export type ContentSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -798,7 +633,6 @@ export type ContentSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   summary?: boolean
   text?: boolean
   priority?: boolean
-  bulletinCandidate?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   article?: boolean | Prisma.ArticleDefaultArgs<ExtArgs>
@@ -812,7 +646,6 @@ export type ContentSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   summary?: boolean
   text?: boolean
   priority?: boolean
-  bulletinCandidate?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   article?: boolean | Prisma.ArticleDefaultArgs<ExtArgs>
@@ -826,16 +659,13 @@ export type ContentSelectScalar = {
   summary?: boolean
   text?: boolean
   priority?: boolean
-  bulletinCandidate?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type ContentOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "articleId" | "type" | "headline" | "summary" | "text" | "priority" | "bulletinCandidate" | "createdAt" | "updatedAt", ExtArgs["result"]["content"]>
+export type ContentOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "articleId" | "type" | "headline" | "summary" | "text" | "priority" | "createdAt" | "updatedAt", ExtArgs["result"]["content"]>
 export type ContentInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   article?: boolean | Prisma.ArticleDefaultArgs<ExtArgs>
-  audio?: boolean | Prisma.Content$audioArgs<ExtArgs>
-  _count?: boolean | Prisma.ContentCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type ContentIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   article?: boolean | Prisma.ArticleDefaultArgs<ExtArgs>
@@ -848,7 +678,6 @@ export type $ContentPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
   name: "Content"
   objects: {
     article: Prisma.$ArticlePayload<ExtArgs>
-    audio: Prisma.$AudioPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -858,7 +687,6 @@ export type $ContentPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     summary: string
     text: string
     priority: number
-    bulletinCandidate: boolean
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["content"]>
@@ -1256,7 +1084,6 @@ readonly fields: ContentFieldRefs;
 export interface Prisma__ContentClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   article<T extends Prisma.ArticleDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ArticleDefaultArgs<ExtArgs>>): Prisma.Prisma__ArticleClient<runtime.Types.Result.GetResult<Prisma.$ArticlePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-  audio<T extends Prisma.Content$audioArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Content$audioArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AudioPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1293,7 +1120,6 @@ export interface ContentFieldRefs {
   readonly summary: Prisma.FieldRef<"Content", 'String'>
   readonly text: Prisma.FieldRef<"Content", 'String'>
   readonly priority: Prisma.FieldRef<"Content", 'Int'>
-  readonly bulletinCandidate: Prisma.FieldRef<"Content", 'Boolean'>
   readonly createdAt: Prisma.FieldRef<"Content", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Content", 'DateTime'>
 }
@@ -1694,30 +1520,6 @@ export type ContentDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Inter
    * Limit how many Contents to delete.
    */
   limit?: number
-}
-
-/**
- * Content.audio
- */
-export type Content$audioArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the Audio
-   */
-  select?: Prisma.AudioSelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the Audio
-   */
-  omit?: Prisma.AudioOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.AudioInclude<ExtArgs> | null
-  where?: Prisma.AudioWhereInput
-  orderBy?: Prisma.AudioOrderByWithRelationInput | Prisma.AudioOrderByWithRelationInput[]
-  cursor?: Prisma.AudioWhereUniqueInput
-  take?: number
-  skip?: number
-  distinct?: Prisma.AudioScalarFieldEnum | Prisma.AudioScalarFieldEnum[]
 }
 
 /**

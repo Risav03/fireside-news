@@ -24,12 +24,3 @@ export const ContentType = {
 } as const
 
 export type ContentType = (typeof ContentType)[keyof typeof ContentType]
-
-
-export const AudioType = {
-  headline: 'headline',
-  bulletin: 'bulletin',
-  stinger: 'stinger'
-} as const
-
-export type AudioType = (typeof AudioType)[keyof typeof AudioType]

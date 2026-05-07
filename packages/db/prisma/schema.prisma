@@ -18,12 +18,6 @@ enum ContentType {
   summary
 }
 
-enum AudioType {
-  headline
-  bulletin
-  stinger
-}
-
 model Article {
   id          String          @id @default(cuid())
   title       String
@@ -43,48 +37,24 @@ model Article {
 }
 
 model Content {
-  id                String      @id @default(cuid())
-  articleId         String
-  article           Article     @relation(fields: [articleId], references: [id], onDelete: Cascade)
-  type              ContentType @default(headline)
-  headline          String
-  summary           String
-  text              String
-  priority          Int
-  bulletinCandidate Boolean     @default(true)
-  audio             Audio[]
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
+  id        String      @id @default(cuid())
+  articleId String
+  article   Article     @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  type      ContentType @default(headline)
+  headline  String
+  summary   String
+  text      String
+  priority  Int
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
 
   @@index([priority, createdAt])
   @@index([type, createdAt])
 }
 
-model Bulletin {
-  id               String   @id @default(cuid())
-  script           String
-  durationSec      Int
-  scheduledForHour DateTime @unique
-  audio            Audio[]
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-
-  @@index([scheduledForHour])
-}
-
-model Audio {
-  id          String    @id @default(cuid())
-  contentId   String?
-  content     Content?  @relation(fields: [contentId], references: [id], onDelete: Cascade)
-  bulletinId  String?
-  bulletin    Bulletin? @relation(fields: [bulletinId], references: [id], onDelete: Cascade)
-  url         String
-  durationSec Int
-  type        AudioType
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  @@index([type, createdAt])
-  @@index([contentId])
-  @@index([bulletinId])
+/// Singleton row (id = "default") for ingestion rate limiting without Redis.
+model SyncState {
+  id            String    @id @default("default")
+  lastIngestAt  DateTime?
+  updatedAt     DateTime  @updatedAt
 }

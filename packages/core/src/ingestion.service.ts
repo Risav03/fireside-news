@@ -179,5 +179,4 @@ function parseAlphaVantageDate(value?: string): Date {
 
 export function assertIngestionConfigured() {
   requireEnv("DATABASE_URL");
-  requireEnv("REDIS_URL");
 }

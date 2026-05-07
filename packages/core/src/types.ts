@@ -1,4 +1,4 @@
-import type { ArticleCategory, AudioType } from "@repo/db";
+import type { ArticleCategory } from "@repo/db";
 
 export type NewsCategory = ArticleCategory;
 
@@ -15,36 +15,4 @@ export type ProcessedContent = {
   headline: string;
   summary: string;
   priority: number;
-};
-
-export type TimelineSegment = {
-  audioId: string;
-  durationSec: number;
-  startedAt: number;
-  type: AudioType;
-  title: string;
-  category: NewsCategory | "station";
-  /** MP3 or other playable asset URL */
-  url: string;
-  /** Original article URL when this segment is a headline tied to an Article */
-  sourceUrl: string | null;
-  /** From Content.priority when segment is headline audio; 0 for station/bulletin */
-  priority: number;
-  /** Article published time (epoch ms) when tied to content; null otherwise */
-  publishedAt: number | null;
-};
-
-export type TimelineState = {
-  channelId: string;
-  startTime: number;
-  segments: TimelineSegment[];
-};
-
-export type NowPlayingResponse = {
-  serverTime: number;
-  currentAudio: TimelineSegment & {
-    offsetSec: number;
-    remainingSec: number;
-  };
-  nextAudio: TimelineSegment[];
 };

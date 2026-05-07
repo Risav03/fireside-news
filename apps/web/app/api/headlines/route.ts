@@ -17,8 +17,10 @@ export async function GET() {
   const headlines = rows.map((r) => ({
     id: r.id,
     headline: r.headline,
+    summary: r.summary,
     category: r.article.category,
     priority: r.priority,
+    source: r.article.source,
     sourceUrl: r.article.url,
     publishedAt: r.article.publishedAt.toISOString(),
   }));

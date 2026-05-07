@@ -12,9 +12,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.92.0",
-    "@aws-sdk/client-s3": "^3.1039.0",
     "@repo/db": "file:../db",
-    "@repo/utils": "file:../utils",
-    "ioredis": "^5.10.1"
+    "@repo/utils": "file:../utils"
   }
 }

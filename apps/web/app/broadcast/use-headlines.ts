@@ -1,49 +1,76 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 export type HeadlineRow = {
   id: string;
   headline: string;
+  summary: string;
   category: string;
   priority: number;
+  source: string;
   sourceUrl: string;
   publishedAt: string;
 };
 
-export function useHeadlines(pollMs = 60_000) {
+const POLL_MS = 900_000;
+
+export function useHeadlines(pollMs = POLL_MS) {
   const [headlines, setHeadlines] = useState<HeadlineRow[]>([]);
   const [headlineError, setHeadlineError] = useState<string | null>(null);
+  const [lastFetchedAt, setLastFetchedAt] = useState<Date | null>(null);
+
+  const fetchHeadlines = useCallback(async () => {
+    const res = await fetch(`/api/headlines?ts=${Date.now()}`, { cache: "no-store" });
+    if (!res.ok) {
+      throw new Error(`headlines ${res.status}`);
+    }
+    const data = (await res.json()) as { headlines: HeadlineRow[] };
+    setHeadlines(data.headlines ?? []);
+    setHeadlineError(null);
+    setLastFetchedAt(new Date());
+  }, []);
+
+  const ingestThenFetch = useCallback(
+    async (forceRefresh: boolean) => {
+      try {
+        const q = forceRefresh ? "&force=1" : "";
+        await fetch(`/api/refresh-news?ts=${Date.now()}${q}`, { cache: "no-store" });
+      } catch {
+        // non-fatal
+      }
+      try {
+        await fetchHeadlines();
+      } catch (e) {
+        setHeadlineError(e instanceof Error ? e.message : "Headlines failed");
+        setHeadlines([]);
+      }
+    },
+    [fetchHeadlines],
+  );
 
   useEffect(() => {
     let cancelled = false;
 
-    async function load() {
-      try {
-        const res = await fetch(`/api/headlines?ts=${Date.now()}`, { cache: "no-store" });
-        if (!res.ok) {
-          throw new Error(`headlines ${res.status}`);
-        }
-        const data = (await res.json()) as { headlines: HeadlineRow[] };
-        if (!cancelled) {
-          setHeadlines(data.headlines ?? []);
-          setHeadlineError(null);
-        }
-      } catch (e) {
-        if (!cancelled) {
-          setHeadlineError(e instanceof Error ? e.message : "Headlines failed");
-          setHeadlines([]);
-        }
+    async function tick(force: boolean) {
+      if (cancelled) {
+        return;
       }
+      await ingestThenFetch(force);
     }
 
-    void load();
-    const id = setInterval(() => void load(), pollMs);
+    void tick(false);
+
+    const id = setInterval(() => void tick(false), pollMs);
     return () => {
       cancelled = true;
       clearInterval(id);
     };
-  }, [pollMs]);
+  }, [ingestThenFetch, pollMs]);
 
-  return { headlines, headlineError };
+  const refreshNow = useCallback(async () => {
+    await ingestThenFetch(true);
+  }, [ingestThenFetch]);
+
+  return { headlines, headlineError, lastFetchedAt, refreshNow };
 }

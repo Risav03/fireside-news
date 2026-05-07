@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  transpilePackages: ["@repo/core", "@repo/db", "@repo/queue", "@repo/utils"],
+  transpilePackages: ["@repo/core", "@repo/db", "@repo/utils"],
   webpack(config) {
     config.resolve.extensionAlias = {
       ...config.resolve.extensionAlias,

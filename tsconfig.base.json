@@ -20,7 +20,6 @@
     "paths": {
       "@repo/core": ["packages/core/src/index.ts"],
       "@repo/db": ["packages/db/src/index.ts"],
-      "@repo/queue": ["packages/queue/src/index.ts"],
       "@repo/utils": ["packages/utils/src/index.ts"]
     }
   }

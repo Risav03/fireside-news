@@ -53,8 +53,7 @@ export const AnyNull = runtime.AnyNull
 export const ModelName = {
   Article: 'Article',
   Content: 'Content',
-  Bulletin: 'Bulletin',
-  Audio: 'Audio'
+  SyncState: 'SyncState'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -98,7 +97,6 @@ export const ContentScalarFieldEnum = {
   summary: 'summary',
   text: 'text',
   priority: 'priority',
-  bulletinCandidate: 'bulletinCandidate',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -106,30 +104,13 @@ export const ContentScalarFieldEnum = {
 export type ContentScalarFieldEnum = (typeof ContentScalarFieldEnum)[keyof typeof ContentScalarFieldEnum]
 
 
-export const BulletinScalarFieldEnum = {
+export const SyncStateScalarFieldEnum = {
   id: 'id',
-  script: 'script',
-  durationSec: 'durationSec',
-  scheduledForHour: 'scheduledForHour',
-  createdAt: 'createdAt',
+  lastIngestAt: 'lastIngestAt',
   updatedAt: 'updatedAt'
 } as const
 
-export type BulletinScalarFieldEnum = (typeof BulletinScalarFieldEnum)[keyof typeof BulletinScalarFieldEnum]
-
-
-export const AudioScalarFieldEnum = {
-  id: 'id',
-  contentId: 'contentId',
-  bulletinId: 'bulletinId',
-  url: 'url',
-  durationSec: 'durationSec',
-  type: 'type',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-} as const
-
-export type AudioScalarFieldEnum = (typeof AudioScalarFieldEnum)[keyof typeof AudioScalarFieldEnum]
+export type SyncStateScalarFieldEnum = (typeof SyncStateScalarFieldEnum)[keyof typeof SyncStateScalarFieldEnum]
 
 
 export const SortOrder = {

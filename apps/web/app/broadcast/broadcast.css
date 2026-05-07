@@ -362,6 +362,19 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+.lower3__summary {
+  margin-top: 8px;
+  font-family: var(--sans);
+  font-size: clamp(13px, 1.15vw, 17px);
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.82);
+  text-wrap: pretty;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-weight: 450;
+}
 .lower3__byline {
   margin-top: 10px;
   display: flex; gap: 10px; align-items: center;

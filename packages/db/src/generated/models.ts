@@ -10,6 +10,5 @@
  */
 export type * from './models/Article'
 export type * from './models/Content'
-export type * from './models/Bulletin'
-export type * from './models/Audio'
+export type * from './models/SyncState'
 export type * from './commonInputTypes'

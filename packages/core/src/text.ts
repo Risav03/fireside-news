@@ -36,8 +36,3 @@ export function truncateToMaxWords(value: string, maxWords: number): string {
   }
   return words.slice(0, maxWords).join(" ");
 }
-
-export function estimateSpokenDurationSec(text: string): number {
-  const words = normalizeText(text).split(" ").filter(Boolean).length;
-  return Math.max(5, Math.ceil((words / 150) * 60));
-}

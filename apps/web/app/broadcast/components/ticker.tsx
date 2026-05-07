@@ -9,6 +9,11 @@ export function Ticker({
   headlines: HeadlineRow[];
   error: string | null;
 }) {
+  function teaser(summary: string) {
+    const t = summary.trim();
+    return t.length > 100 ? `${t.slice(0, 97)}…` : t;
+  }
+
   const items =
     headlines.length === 0
       ? [
@@ -16,7 +21,7 @@ export function Ticker({
             ? `HEADLINE FEED ERROR — ${error}`
             : "Awaiting headlines from ingestion…",
         ]
-      : headlines.flatMap((h) => `${h.category.toUpperCase()}: ${h.headline}`);
+      : headlines.flatMap((h) => `${h.category.toUpperCase()}: ${h.headline} — ${teaser(h.summary)}`);
 
   const track = [...items, ...items];
 
