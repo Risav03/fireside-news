@@ -40,6 +40,7 @@
         "@prisma/adapter-pg": "^7.8.0",
         "@prisma/client": "^7.8.0",
         "@repo/utils": "file:../utils",
+        "dotenv": "^17.4.2",
         "pg": "^8.20.0",
         "prisma": "^7.8.0",
       },
@@ -420,7 +421,7 @@
 
     "@repo/db/@repo/utils": ["@repo/utils@file:packages/utils", {}],
 
-    "@repo/web/@repo/db": ["@repo/db@file:packages/db", { "dependencies": { "@prisma/adapter-pg": "^7.8.0", "@prisma/client": "^7.8.0", "@repo/utils": "file:../utils", "pg": "^8.20.0", "prisma": "^7.8.0" }, "devDependencies": { "@types/pg": "^8.20.0" } }],
+    "@repo/web/@repo/core": ["@repo/core@file:packages/core", { "dependencies": { "@anthropic-ai/sdk": "^0.92.0", "@repo/db": "file:../db", "@repo/utils": "file:../utils" } }],
 
     "@repo/web/@repo/utils": ["@repo/utils@file:packages/utils", {}],
 
@@ -430,6 +431,8 @@
 
     "@repo/core/@repo/db/@repo/utils": ["@repo/utils@file:packages/utils", {}],
 
-    "@repo/web/@repo/db/@repo/utils": ["@repo/utils@file:packages/utils", {}],
+    "@repo/web/@repo/core/@repo/db": ["@repo/db@file:packages/db", {}],
+
+    "@repo/web/@repo/core/@repo/utils": ["@repo/utils@file:packages/utils", {}],
   }
 }
