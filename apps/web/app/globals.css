@@ -1,196 +1,71 @@
+@import "tailwindcss";
+@source ".";
+
 :root {
   color-scheme: dark;
-  --background: #080b12;
-  --foreground: #f5f7fb;
-  --muted: #98a2b3;
-  --panel: rgba(255, 255, 255, 0.07);
-  --panel-strong: rgba(255, 255, 255, 0.12);
-  --accent: #76e4f7;
-  --accent-strong: #38bdf8;
+  --brand: #c81e1e;
+  --brand-deep: #8b0e0e;
+  --gold: #ffc857;
+  --bg: #050608;
+  --bg-2: #0a0c12;
+  --ink: #f5f5f5;
+  --mute: #9aa3b2;
+  --line: rgba(255, 255, 255, 0.1);
+  --green: #39e36b;
+  --red: #ff4444;
+  --crypto: #f7931a;
+  --stocks: #2e7dff;
+  --serif: var(--font-serif), Georgia, "Times New Roman", serif;
+  --sans: var(--font-sans), "Helvetica Neue", Arial, sans-serif;
+  --display: var(--font-display), var(--font-sans), "Helvetica Neue", Arial, sans-serif;
+  --mono: var(--font-mono), ui-monospace, monospace;
 }
 
-* {
-  box-sizing: border-box;
+@theme {
+  --animate-blink: blink 1.2s infinite;
+  --animate-breaking-in: breakingIn 0.6s ease-out;
+  --animate-flash-pulse: flashpulse 1.6s infinite;
+  --animate-scroll-left: scrollLeft linear infinite;
+  --animate-shine: shine 3s infinite;
 }
 
-html,
-body {
-  margin: 0;
-  min-height: 100%;
-  background:
-    radial-gradient(circle at top left, rgba(56, 189, 248, 0.22), transparent 34rem),
-    radial-gradient(circle at bottom right, rgba(99, 102, 241, 0.18), transparent 38rem),
-    var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@keyframes blink {
+  50% {
+    opacity: 0.25;
+  }
 }
 
-button {
-  font: inherit;
-}
-
-a {
-  color: inherit;
-}
-
-.min-h-screen {
-  min-height: 100vh;
-}
-
-.player-shell {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 24rem;
-  gap: 1.5rem;
-  min-height: 100vh;
-  padding: 5rem;
-}
-
-.hero-card,
-.queue-card {
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: var(--panel);
-  box-shadow: 0 2rem 5rem rgba(0, 0, 0, 0.28);
-  backdrop-filter: blur(24px);
-}
-
-.hero-card {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  min-height: calc(100vh - 10rem);
-  padding: 4rem;
-  border-radius: 2rem;
-}
-
-.queue-card {
-  align-self: stretch;
-  padding: 2rem;
-  border-radius: 1.5rem;
-}
-
-.eyebrow,
-.label {
-  color: var(--accent);
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-}
-
-h1 {
-  max-width: 52rem;
-  margin: 1rem 0;
-  font-size: clamp(3rem, 7vw, 6.8rem);
-  line-height: 0.92;
-  letter-spacing: -0.08em;
-}
-
-.lede {
-  max-width: 45rem;
-  color: var(--muted);
-  font-size: 1.15rem;
-  line-height: 1.7;
-}
-
-.now-card {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1.5rem;
-  margin-top: 3rem;
-  padding: 1.25rem;
-  border-radius: 1.25rem;
-  background: var(--panel-strong);
-}
-
-.now-card h2 {
-  margin: 0.35rem 0;
-  font-size: clamp(1.35rem, 3vw, 2.25rem);
-}
-
-.now-card p,
-.muted,
-.status {
-  margin: 0;
-  color: var(--muted);
-}
-
-.now-card .source-line {
-  margin-top: 0.5rem;
-}
-
-.now-card button {
-  min-width: 9rem;
-  border: 0;
-  border-radius: 999rem;
-  padding: 0.9rem 1.3rem;
-  color: #041018;
-  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.progress-track {
-  height: 0.45rem;
-  margin-top: 1.25rem;
-  overflow: hidden;
-  border-radius: 999rem;
-  background: rgba(255, 255, 255, 0.12);
-}
-
-.progress-track div {
-  height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, var(--accent), #a78bfa);
-  transition: width 0.25s ease;
-}
-
-.status {
-  margin-top: 1rem;
-  min-height: 1.5rem;
-}
-
-.status.error {
-  color: #fca5a5;
-}
-
-.queue-list {
-  display: grid;
-  gap: 0.9rem;
-  margin-top: 1.25rem;
-}
-
-.queue-item {
-  display: grid;
-  gap: 0.35rem;
-  padding: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 1rem;
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.queue-item span,
-.queue-item small {
-  color: var(--muted);
-}
-
-.queue-item strong {
-  line-height: 1.35;
-}
-
-@media (max-width: 960px) {
-  .player-shell {
-    grid-template-columns: 1fr;
-    padding: 1rem;
+@keyframes breakingIn {
+  from {
+    transform: translateX(-50%) translateY(-20px);
+    opacity: 0;
   }
 
-  .hero-card {
-    min-height: auto;
-    padding: 2rem;
+  to {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes flashpulse {
+  50% {
+    background: rgba(255, 255, 255, 0.18);
+  }
+}
+
+@keyframes scrollLeft {
+  from {
+    transform: translateX(0);
   }
 
-  .now-card {
-    align-items: stretch;
-    flex-direction: column;
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes shine {
+  50%,
+  100% {
+    transform: translateX(100%);
   }
 }

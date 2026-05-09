@@ -29,14 +29,18 @@ export function WaveformScene() {
   }, []);
 
   return (
-    <div className="wave">
-      <div className="wave__label">HEADLINES · ROTATION</div>
-      <div className="wave__bars">
+    <div className="absolute inset-0 grid grid-rows-[auto_1fr_auto] items-center px-20 pt-20 pb-[140px]">
+      <div className="text-center font-[var(--display)] text-[32px] font-bold tracking-[0.18em] text-[var(--brand)]">HEADLINES · ROTATION</div>
+      <div className="flex h-[60%] items-center justify-center gap-1">
         {heights.map((b, i) => (
-          <span key={i} style={{ height: `${b * 100}%` }} />
+          <span
+            className="w-2 rounded-sm bg-[linear-gradient(180deg,var(--gold),var(--brand))] shadow-[0_0_12px_rgba(255,170,40,0.4)] transition-[height] duration-100 ease-out"
+            key={i}
+            style={{ height: `${b * 100}%` }}
+          />
         ))}
       </div>
-      <div className="wave__caption">FIRESIDE NEWS — TEXT FEED</div>
+      <div className="text-center text-[12px] font-bold tracking-[0.3em] text-[var(--mute)]">FIRESIDE NEWS — TEXT FEED</div>
     </div>
   );
 }

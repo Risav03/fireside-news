@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { AnchorMode, BreakingMode, BroadcastSettings, BroadcastSkin } from "../use-broadcast-settings";
+import type { BroadcastSettings, BroadcastSkin } from "../use-broadcast-settings";
 
 export function BroadcastSettingsPopover({
   settings,
@@ -29,15 +29,23 @@ export function BroadcastSettingsPopover({
   }, [open]);
 
   return (
-    <div className="broadcast-settings" ref={wrapRef}>
-      <button type="button" className="broadcast-settings__toggle" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+    <div className="relative" ref={wrapRef}>
+      <button
+        type="button"
+        className="cursor-pointer appearance-none rounded border border-white/15 bg-black/35 px-2.5 py-1.5 text-sm leading-none text-[var(--ink)]"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+      >
         ⚙
       </button>
       {open ? (
-        <div className="broadcast-settings__panel">
-          <div className="broadcast-settings__row">
-            <label htmlFor="skin">Skin</label>
+        <div className="absolute top-full right-0 z-50 mt-2 min-w-60 rounded border border-[var(--line)] bg-[rgba(12,14,20,0.95)] px-3.5 py-3 shadow-[0_12px_40px_rgba(0,0,0,0.45)]">
+          <div className="mb-2.5 flex items-center justify-between gap-2.5 text-[11px] tracking-[0.12em] text-[var(--mute)]">
+            <label className="font-bold" htmlFor="skin">
+              Skin
+            </label>
             <select
+              className="max-w-[140px]"
               id="skin"
               value={settings.skin}
               onChange={(e) => onChange({ skin: e.target.value as BroadcastSkin })}
@@ -47,38 +55,17 @@ export function BroadcastSettingsPopover({
               <option value="wire">Wire</option>
             </select>
           </div>
-          <div className="broadcast-settings__row">
-            <label htmlFor="brand">Brand color</label>
+          <div className="flex items-center justify-between gap-2.5 text-[11px] tracking-[0.12em] text-[var(--mute)]">
+            <label className="font-bold" htmlFor="brand">
+              Brand color
+            </label>
             <input
+              className="max-w-[140px]"
               id="brand"
               type="color"
               value={settings.networkColor}
               onChange={(e) => onChange({ networkColor: e.target.value })}
             />
-          </div>
-          <div className="broadcast-settings__row">
-            <label htmlFor="mode">Studio mode</label>
-            <select
-              id="mode"
-              value={settings.anchorMode}
-              onChange={(e) => onChange({ anchorMode: e.target.value as AnchorMode })}
-            >
-              <option value="anchor">Anchor</option>
-              <option value="waveform">Waveform</option>
-              <option value="map">Map</option>
-            </select>
-          </div>
-          <div className="broadcast-settings__row">
-            <label htmlFor="break">Breaking bug</label>
-            <select
-              id="break"
-              value={settings.breakingMode}
-              onChange={(e) => onChange({ breakingMode: e.target.value as BreakingMode })}
-            >
-              <option value="auto">Auto (priority ≥ 8)</option>
-              <option value="on">Force on</option>
-              <option value="off">Force off</option>
-            </select>
           </div>
         </div>
       ) : null}

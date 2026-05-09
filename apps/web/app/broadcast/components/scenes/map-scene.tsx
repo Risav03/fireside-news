@@ -2,8 +2,8 @@
 
 export function MapScene({ category }: { category: string }) {
   return (
-    <div className="map">
-      <svg viewBox="0 0 800 400" preserveAspectRatio="xMidYMid slice">
+    <div className="absolute inset-0">
+      <svg className="h-full w-full" viewBox="0 0 800 400" preserveAspectRatio="xMidYMid slice">
         <defs>
           <pattern id="dots" x="0" y="0" width="6" height="6" patternUnits="userSpaceOnUse">
             <circle cx="1.5" cy="1.5" r="0.9" fill="rgba(255,255,255,0.16)" />
@@ -50,7 +50,9 @@ export function MapScene({ category }: { category: string }) {
           </g>
         ))}
       </svg>
-      <div className="map__cap">GLOBAL · {category.toUpperCase()} DESK</div>
+      <div className="absolute bottom-[100px] left-1/2 -translate-x-1/2 font-[var(--display)] text-[26px] font-bold tracking-[0.2em] text-[var(--gold)] [text-shadow:0_0_18px_rgba(255,170,40,0.4)]">
+        GLOBAL · {category.toUpperCase()} DESK
+      </div>
     </div>
   );
 }
