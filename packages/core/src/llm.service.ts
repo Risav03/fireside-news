@@ -4,7 +4,7 @@ import { clamp, requireEnv } from "@repo/utils";
 import { truncateToMaxWords } from "./text";
 import type { ProcessedContent } from "./types";
 
-const MAX_SUMMARY_WORDS = 60;
+const MAX_SUMMARY_WORDS = 40;
 
 const ANCHOR_SYSTEM_PROMPT =
   "You are a professional news editor. Write clear, factual news copy without markdown. Headline is one concise line for on-screen display. Summary is brief prose readers skim in seconds—no bullets.";
@@ -84,29 +84,33 @@ export async function processArticles(prisma: PrismaClient, anthropic: Anthropic
   const contentIds: string[] = [];
 
   for (const article of articles) {
-    const processed = await summarizeArticle(anthropic, article);
-    const text = `${processed.headline}. ${processed.summary}`;
+    try {
+      const processed = await summarizeArticle(anthropic, article);
+      const text = `${processed.headline}. ${processed.summary}`;
 
-    const content = await prisma.content.create({
-      data: {
-        articleId: article.id,
-        headline: processed.headline,
-        summary: processed.summary,
-        text,
-        priority: processed.priority,
-      },
-    });
+      const content = await prisma.content.create({
+        data: {
+          articleId: article.id,
+          headline: processed.headline,
+          summary: processed.summary,
+          text,
+          priority: processed.priority,
+        },
+      });
 
-    await prisma.article.update({
-      where: {
-        id: article.id,
-      },
-      data: {
-        processedAt: new Date(),
-      },
-    });
+      await prisma.article.update({
+        where: {
+          id: article.id,
+        },
+        data: {
+          processedAt: new Date(),
+        },
+      });
 
-    contentIds.push(content.id);
+      contentIds.push(content.id);
+    } catch (cause) {
+      console.error("[process-article]", { articleId: article.id, cause });
+    }
   }
 
   return contentIds;
@@ -119,14 +123,16 @@ function parseSummaryToolInput(input: unknown) {
 
   const record = input as Record<string, unknown>;
   const { headline, summary, importance } = record;
+  const normalizedImportance =
+    typeof importance === "number" ? importance : typeof importance === "string" ? Number.parseFloat(importance) : Number.NaN;
 
-  if (typeof headline !== "string" || typeof summary !== "string" || typeof importance !== "number") {
+  if (typeof headline !== "string" || typeof summary !== "string" || !Number.isFinite(normalizedImportance)) {
     throw new Error("Anthropic summary response had an invalid structured tool input shape.");
   }
 
   return {
     headline,
     summary,
-    importance,
+    importance: Math.round(normalizedImportance),
   };
 }

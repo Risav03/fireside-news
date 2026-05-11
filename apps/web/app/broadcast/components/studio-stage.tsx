@@ -40,8 +40,8 @@ export function StudioStage({
   return (
     <div className="grid min-h-0">
       <div className="isolate relative min-h-0 overflow-hidden rounded border border-[var(--line)] bg-[#050608]">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_90%_60%_at_50%_100%,rgba(46,125,255,0.20),transparent_70%),radial-gradient(ellipse_60%_40%_at_30%_30%,rgba(255,170,40,0.10),transparent_70%),linear-gradient(180deg,#0a1024_0%,#06070d_70%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(120,150,200,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(120,150,200,0.06)_1px,transparent_1px)] bg-[length:32px_32px] [mask-image:radial-gradient(ellipse_80%_60%_at_50%_50%,#000_40%,transparent_100%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_90%_60%_at_50%_100%,rgba(235,107,52,0.16),transparent_70%),radial-gradient(ellipse_60%_40%_at_30%_30%,rgba(255,170,40,0.10),transparent_70%),linear-gradient(180deg,#0c0e14_0%,#06070d_70%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(235,107,52,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(235,107,52,0.045)_1px,transparent_1px)] bg-[length:32px_32px] [mask-image:radial-gradient(ellipse_80%_60%_at_50%_50%,#000_40%,transparent_100%)]" />
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_100%_80%_at_50%_50%,transparent_50%,rgba(0,0,0,0.6)_100%)]" />
 
         {anchorMode === "anchor" ? <AnchorScene category={category} /> : null}
@@ -67,7 +67,7 @@ export function StudioStage({
         </div>
 
         {breaking ? (
-          <div className="absolute top-[60px] left-1/2 z-[6] flex -translate-x-1/2 animate-breaking-in items-stretch border border-white/20 shadow-[0_8px_32px_rgba(200,30,30,0.4)]">
+          <div className="absolute top-[60px] left-1/2 z-[6] flex -translate-x-1/2 animate-breaking-in items-stretch border border-white/20 shadow-[0_8px_32px_rgba(235,107,52,0.4)]">
             <div className="relative grid place-items-center overflow-hidden bg-[var(--brand)] px-3 py-1.5 text-[11px] font-black tracking-[0.16em] text-white after:absolute after:inset-0 after:animate-flash-pulse after:bg-white/0 after:content-['']">
               BREAKING
             </div>

@@ -14,13 +14,22 @@ export type BroadcastSettings = {
 };
 
 const STORAGE_KEY = "fireside-broadcast-settings";
+const LEGACY_DEFAULT_NETWORK_COLOR = "#c81e1e";
 
 const DEFAULTS: BroadcastSettings = {
-  networkColor: "#C81E1E",
+  networkColor: "#eb6b34",
   skin: "primetime",
   anchorMode: "anchor",
   breakingMode: "auto",
 };
+
+function normalizeNetworkColor(value: unknown) {
+  if (typeof value !== "string") {
+    return DEFAULTS.networkColor;
+  }
+
+  return value.toLowerCase() === LEGACY_DEFAULT_NETWORK_COLOR ? DEFAULTS.networkColor : value;
+}
 
 function readStored(): BroadcastSettings {
   if (typeof window === "undefined") {
@@ -33,7 +42,7 @@ function readStored(): BroadcastSettings {
     }
     const parsed = JSON.parse(raw) as Partial<BroadcastSettings>;
     return {
-      networkColor: typeof parsed.networkColor === "string" ? parsed.networkColor : DEFAULTS.networkColor,
+      networkColor: normalizeNetworkColor(parsed.networkColor),
       skin: parsed.skin === "morning" || parsed.skin === "wire" || parsed.skin === "primetime" ? parsed.skin : DEFAULTS.skin,
       anchorMode:
         parsed.anchorMode === "waveform" || parsed.anchorMode === "map" || parsed.anchorMode === "anchor"

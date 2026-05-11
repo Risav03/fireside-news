@@ -3,8 +3,8 @@
 
 :root {
   color-scheme: dark;
-  --brand: #c81e1e;
-  --brand-deep: #8b0e0e;
+  --brand: #eb6b34;
+  --brand-deep: #a33a14;
   --gold: #ffc857;
   --bg: #050608;
   --bg-2: #0a0c12;
@@ -14,7 +14,7 @@
   --green: #39e36b;
   --red: #ff4444;
   --crypto: #f7931a;
-  --stocks: #2e7dff;
+  --stocks: var(--brand);
   --serif: var(--font-serif), Georgia, "Times New Roman", serif;
   --sans: var(--font-sans), "Helvetica Neue", Arial, sans-serif;
   --display: var(--font-display), var(--font-sans), "Helvetica Neue", Arial, sans-serif;

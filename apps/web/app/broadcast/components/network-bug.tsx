@@ -28,7 +28,7 @@ export function NetworkBug({
             <linearGradient id="flame" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0" stopColor="#FFD86B" />
               <stop offset="0.5" stopColor="#FF7A1A" />
-              <stop offset="1" stopColor="#C81E1E" />
+              <stop offset="1" stopColor="#eb6b34" />
             </linearGradient>
           </defs>
         </svg>
@@ -39,7 +39,7 @@ export function NetworkBug({
       </div>
       <div className="ml-auto flex items-center gap-3">
         <div
-          className="flex items-center gap-2 rounded-sm bg-[var(--brand)] px-3 py-1.5 text-[12px] font-extrabold tracking-[0.2em] text-white shadow-[0_0_0_1px_rgba(255,255,255,0.08),0_6px_24px_rgba(200,30,30,0.35)]"
+          className="flex items-center gap-2 rounded-sm bg-[var(--brand)] px-3 py-1.5 text-[12px] font-extrabold tracking-[0.2em] text-white shadow-[0_0_0_1px_rgba(255,255,255,0.08),0_6px_24px_rgba(235,107,52,0.35)]"
           title="Headlines fetched from database"
         >
           <span className="h-2 w-2 animate-blink rounded-full bg-white" />
@@ -50,7 +50,7 @@ export function NetworkBug({
         </div>
         <button
           type="button"
-          className="flex cursor-pointer items-center gap-2 rounded-sm border-0 bg-transparent px-3 py-1.5 text-[12px] font-extrabold tracking-[0.2em] text-white shadow-[0_0_0_1px_rgba(255,255,255,0.08),0_6px_24px_rgba(200,30,30,0.35)] [font:inherit]"
+          className="flex cursor-pointer items-center gap-2 rounded-sm border-0 bg-transparent px-3 py-1.5 text-[12px] font-extrabold tracking-[0.2em] text-white shadow-[0_0_0_1px_rgba(255,255,255,0.08),0_6px_24px_rgba(235,107,52,0.35)] [font:inherit]"
           onClick={() => onRefreshPress()}
         >
           FETCH NOW

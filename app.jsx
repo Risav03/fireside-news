@@ -4,6 +4,7 @@
 const { useState, useEffect, useRef, useMemo, useCallback } = React;
 
 const STORAGE_KEY = "fireside-broadcast-settings";
+const LEGACY_DEFAULT_NETWORK_COLOR = "#c81e1e";
 
 const CATEGORY_META = {
   news: { label: "TOP STORY", tone: "live", chyron: "DEVELOPING NOW" },
@@ -13,7 +14,7 @@ const CATEGORY_META = {
 };
 
 const DEFAULT_SETTINGS = {
-  networkColor: "#C81E1E",
+  networkColor: "#eb6b34",
   anchorMode: "anchor",
   tickerSpeed: 80,
   crawlSpeed: 45,
@@ -21,11 +22,17 @@ const DEFAULT_SETTINGS = {
   skin: "primetime",
 };
 
+function normalizeNetworkColor(value) {
+  if (typeof value !== "string") return DEFAULT_SETTINGS.networkColor;
+  return value.toLowerCase() === LEGACY_DEFAULT_NETWORK_COLOR ? DEFAULT_SETTINGS.networkColor : value;
+}
+
 function readSettings() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return { ...DEFAULT_SETTINGS };
-    return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
+    const parsed = JSON.parse(raw);
+    return { ...DEFAULT_SETTINGS, ...parsed, networkColor: normalizeNetworkColor(parsed.networkColor) };
   } catch {
     return { ...DEFAULT_SETTINGS };
   }
@@ -148,7 +155,7 @@ function NetworkBug({ live, blocked, onUnmute }) {
             <linearGradient id="flameProto" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0" stopColor="#FFD86B" />
               <stop offset="0.5" stopColor="#FF7A1A" />
-              <stop offset="1" stopColor="#C81E1E" />
+              <stop offset="1" stopColor="#eb6b34" />
             </linearGradient>
           </defs>
         </svg>
@@ -193,7 +200,7 @@ function TopStrap({ now, settingsPanel }) {
         <span className="strap__pill">LIVE</span>
         <span className="strap__chan">CH 24 — FIRESIDE NEWS</span>
       </div>
-      <div className="strap__center">AI-GENERATED HEADLINES • UPDATED EVERY HOUR • STREAMING WORLDWIDE</div>
+      <div className="strap__center">HEADLINES • UPDATED EVERY HOUR • STREAMING WORLDWIDE</div>
       <div className="strap__right">
         <span>{date}</span>
         <span className="strap__time">{time} ET</span>

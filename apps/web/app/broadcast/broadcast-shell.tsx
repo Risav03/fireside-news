@@ -12,14 +12,14 @@ import { useHeadlines } from "./use-headlines";
 import { useMarkets } from "./use-markets";
 import { useRotatingHeadlines } from "./use-rotating-headlines";
 
-const MIN_CARD_DWELL_MS = 4_500;
-const MAX_CARD_DWELL_MS = 18_000;
-const BASE_CARD_DWELL_MS = 3_500;
-const MS_PER_CARD_CHARACTER = 45;
+const MIN_CARD_DWELL_MS = 12_000;
+const MAX_CARD_DWELL_MS = 32_000;
+const BASE_CARD_DWELL_MS = 8_000;
+const MS_PER_CARD_CHARACTER = 55;
 
 const SKIN_VARS: Record<string, { bg: string; bg2: string }> = {
   primetime: { bg: "#050608", bg2: "#0a0c12" },
-  morning: { bg: "#0e1320", bg2: "#131a2c" },
+  morning: { bg: "#120d0a", bg2: "#1a100b" },
   wire: { bg: "#0b0b0d", bg2: "#15161a" },
 };
 
@@ -34,7 +34,7 @@ export function BroadcastShell() {
   const { headlines, headlineError, lastFetchedAt, refreshNow } = useHeadlines();
   const markets = useMarkets();
 
-  const { current: spotlight, progress, index } = useRotatingHeadlines(headlines, getCardDwellMs);
+  const { current: spotlight, progress, index, selectHeadline } = useRotatingHeadlines(headlines, getCardDwellMs);
 
   const skin = SKIN_VARS[settings.skin] ?? SKIN_VARS.primetime;
   const shellStyle = {
@@ -53,7 +53,7 @@ export function BroadcastShell() {
 
   return (
     <div
-      className="grid h-screen min-h-screen grid-rows-[auto_1fr_auto_auto] overflow-hidden bg-[radial-gradient(ellipse_at_20%_0%,rgba(200,30,30,0.10),transparent_50%),radial-gradient(ellipse_at_100%_100%,rgba(46,125,255,0.08),transparent_55%),var(--bg)] font-[var(--sans)] font-medium tracking-[0.01em] text-[var(--ink)] antialiased"
+      className="grid min-h-screen grid-rows-[auto_1fr_auto_auto] overflow-x-hidden bg-[radial-gradient(ellipse_at_20%_0%,rgba(235,107,52,0.10),transparent_50%),radial-gradient(ellipse_at_100%_100%,rgba(235,107,52,0.06),transparent_55%),var(--bg)] font-[var(--sans)] font-medium tracking-[0.01em] text-[var(--ink)] antialiased"
       data-screen-label="01 Broadcast"
       data-skin={settings.skin}
       style={shellStyle}
@@ -69,18 +69,20 @@ export function BroadcastShell() {
         </div>
       ) : null}
 
-      <div className="grid min-h-0 grid-cols-[minmax(0,1180px)] justify-center p-[18px] max-[960px]:p-2.5">
+      <div className="grid grid-cols-[minmax(0,1180px)] justify-center p-[18px] max-[960px]:p-2.5 max-[640px]:p-2">
         <CardReader
           headline={spotlight}
           queue={cardQueue}
           progress={progress}
           lastUpdatedAt={lastFetchedAt}
           onRefreshPress={() => void refreshNow()}
+          onSelectHeadline={selectHeadline}
         />
       </div>
-
-      <Ticker headlines={headlines} error={headlineError} />
-      <MarketsCrawl available={markets.available} items={markets.items} message={markets.message ?? "Markets feed offline"} />
+      <div className="fixed bottom-0 left-0 right-0">
+        <Ticker headlines={headlines} error={headlineError} />
+        <MarketsCrawl available={markets.available} items={markets.items} message={markets.message ?? "Markets feed offline"} />
+      </div>
     </div>
   );
 }
