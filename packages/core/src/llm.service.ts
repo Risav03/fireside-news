@@ -5,6 +5,7 @@ import { truncateToMaxWords } from "./text";
 import type { ProcessedContent } from "./types";
 
 const MAX_SUMMARY_WORDS = 40;
+const PROCESS_ARTICLE_CONCURRENCY = 3;
 
 const ANCHOR_SYSTEM_PROMPT =
   "You are a professional news editor. Write clear, factual news copy without markdown. Headline is one concise line for on-screen display. Summary is brief prose readers skim in seconds—no bullets.";
@@ -38,7 +39,7 @@ export async function summarizeArticle(
 ): Promise<ProcessedContent> {
   const response = await anthropic.messages.create({
     model: ANTHROPIC_MODEL,
-    max_tokens: 3_072,
+    max_tokens: 512,
     system: ANCHOR_SYSTEM_PROMPT,
     tools: [SUMMARY_TOOL],
     tool_choice: {
@@ -68,7 +69,12 @@ export async function summarizeArticle(
   };
 }
 
-export async function processArticles(prisma: PrismaClient, anthropic: Anthropic, articleIds: string[]): Promise<string[]> {
+export async function processArticles(
+  prisma: PrismaClient,
+  anthropic: Anthropic,
+  articleIds: string[],
+  options?: { limit?: number },
+): Promise<string[]> {
   const articles = await prisma.article.findMany({
     where: {
       id: {
@@ -79,41 +85,53 @@ export async function processArticles(prisma: PrismaClient, anthropic: Anthropic
     orderBy: {
       publishedAt: "desc",
     },
+    take: options?.limit,
   });
 
   const contentIds: string[] = [];
 
-  for (const article of articles) {
-    try {
-      const processed = await summarizeArticle(anthropic, article);
-      const text = `${processed.headline}. ${processed.summary}`;
-
-      const content = await prisma.content.create({
-        data: {
-          articleId: article.id,
-          headline: processed.headline,
-          summary: processed.summary,
-          text,
-          priority: processed.priority,
-        },
-      });
-
-      await prisma.article.update({
-        where: {
-          id: article.id,
-        },
-        data: {
-          processedAt: new Date(),
-        },
-      });
-
-      contentIds.push(content.id);
-    } catch (cause) {
-      console.error("[process-article]", { articleId: article.id, cause });
-    }
+  for (let i = 0; i < articles.length; i += PROCESS_ARTICLE_CONCURRENCY) {
+    const batch = articles.slice(i, i + PROCESS_ARTICLE_CONCURRENCY);
+    const batchContentIds = await Promise.all(batch.map((article) => processArticle(prisma, anthropic, article)));
+    contentIds.push(...batchContentIds.flatMap((id) => (id ? [id] : [])));
   }
 
   return contentIds;
+}
+
+async function processArticle(
+  prisma: PrismaClient,
+  anthropic: Anthropic,
+  article: { id: string; title: string; content: string; source: string },
+): Promise<string | null> {
+  try {
+    const processed = await summarizeArticle(anthropic, article);
+    const text = `${processed.headline}. ${processed.summary}`;
+
+    const content = await prisma.content.create({
+      data: {
+        articleId: article.id,
+        headline: processed.headline,
+        summary: processed.summary,
+        text,
+        priority: processed.priority,
+      },
+    });
+
+    await prisma.article.update({
+      where: {
+        id: article.id,
+      },
+      data: {
+        processedAt: new Date(),
+      },
+    });
+
+    return content.id;
+  } catch (cause) {
+    console.error("[process-article]", { articleId: article.id, cause });
+    return null;
+  }
 }
 
 function parseSummaryToolInput(input: unknown) {

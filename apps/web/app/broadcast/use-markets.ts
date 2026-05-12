@@ -1,8 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-export type MarketItem = { sym: string; val: string; chg: string; pct: string; up: boolean };
+export type MarketItem = {
+  sym: string;
+  name: string;
+  val: string;
+  chg: string;
+  pct: string;
+  up: boolean;
+  chain: "base" | "solana";
+  iconUrl?: string;
+  url: string;
+};
 
 type MarketsResponse = {
   available: boolean;
@@ -10,44 +20,52 @@ type MarketsResponse = {
   message?: string;
 };
 
-export function useMarkets(pollMs = 30_000) {
+export function useMarkets() {
+  const inFlightRef = useRef(false);
   const [data, setData] = useState<MarketsResponse>({
     available: false,
     items: [],
     message: "Markets feed offline",
   });
 
-  useEffect(() => {
-    let cancelled = false;
+  const load = useCallback(
+    async (options?: { signal?: AbortSignal }) => {
+      if (inFlightRef.current) {
+        return;
+      }
 
-    async function load() {
+      inFlightRef.current = true;
       try {
-        const res = await fetch(`/api/markets?ts=${Date.now()}`, { cache: "no-store" });
+        const res = await fetch(`/api/markets?ts=${Date.now()}`, { cache: "no-store", signal: options?.signal });
         if (!res.ok) {
           throw new Error(`markets ${res.status}`);
         }
         const json = (await res.json()) as MarketsResponse;
-        if (!cancelled) {
-          setData({
-            available: Boolean(json.available && json.items?.length),
-            items: json.items ?? [],
-            message: json.message ?? "Markets feed offline",
-          });
+        setData({
+          available: Boolean(json.available && json.items?.length),
+          items: json.items ?? [],
+          message: json.message ?? "Markets feed offline",
+        });
+      } catch (cause) {
+        if (cause instanceof DOMException && cause.name === "AbortError") {
+          return;
         }
-      } catch {
-        if (!cancelled) {
-          setData({ available: false, items: [], message: "Markets feed offline" });
-        }
+
+        setData({ available: false, items: [], message: "Markets feed offline" });
+      } finally {
+        inFlightRef.current = false;
       }
-    }
+    },
+    [],
+  );
 
-    void load();
-    const id = setInterval(() => void load(), pollMs);
+  useEffect(() => {
+    const controller = new AbortController();
+    void load({ signal: controller.signal });
     return () => {
-      cancelled = true;
-      clearInterval(id);
+      controller.abort();
     };
-  }, [pollMs]);
+  }, [load]);
 
-  return data;
+  return { ...data, refreshNow: load };
 }

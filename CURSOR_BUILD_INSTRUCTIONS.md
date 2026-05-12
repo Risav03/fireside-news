@@ -148,42 +148,29 @@ The `Ticker` component fetches this every 60s and renders `headline` strings int
 
 ### 4c. Markets crawl — NEW endpoint
 
-There is **no markets data in this repo today**. Add a real provider — pick one and document the env var:
+There is **no markets data in this repo today**. Add a real provider and avoid paid-key requirements:
 
-- **CoinGecko** for crypto (`/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd&include_24hr_change=true`) — no key required for the free tier.
-- **Polygon.io** or **Finnhub** for stocks/indices/FX (key in `MARKETS_API_KEY`).
-- Cache responses in Redis (the `@repo/queue` package already exposes a Redis connection helper) for 30–60s to stay under free-tier quotas.
+- **Dexscreener** for crypto token data. Use boosted/profile token endpoints for candidates, filter to Base and Solana, then hydrate prices with `/tokens/v1/{chainId}/{tokenAddresses}`.
+- Cache responses for 30–60s to stay under public API quotas.
 
 ```ts
 // apps/web/app/api/markets/route.ts
 import "../../env.js";
 import { NextResponse } from "next/server";
-import { createRedisConnection } from "@repo/queue";
-import { requiredEnv } from "@repo/utils";
 
 export const dynamic = "force-dynamic";
 
-const CACHE_KEY = "markets:v1";
 const TTL_SEC = 45;
 
 export async function GET() {
-  const redis = createRedisConnection();
-  const cached = await redis.get(CACHE_KEY);
-  if (cached) return NextResponse.json(JSON.parse(cached));
-
-  const [crypto, stocks] = await Promise.all([
-    fetchCoinGecko(),
-    fetchStocks(requiredEnv("MARKETS_API_KEY")),
-  ]);
-  const payload = [...stocks, ...crypto]; // shape: { sym, val, chg, pct, up }
-  await redis.set(CACHE_KEY, JSON.stringify(payload), "EX", TTL_SEC);
+  const payload = await fetchDexscreenerBaseAndSolanaMarkets();
   return NextResponse.json(payload, { headers: { "cache-control": "no-store" } });
 }
 ```
 
 Frontend hook polls `/api/markets` every 30s. If the response is empty or errors, render the rail with a single muted item: "Markets feed offline" — **never** fall back to baked-in numbers.
 
-Update `apps/web/app/env.ts` to declare `MARKETS_API_KEY` as optional (so dev still boots) but log a warning when missing.
+No market API key is required for the Dexscreener-backed implementation.
 
 ### 4d. Clock & date
 
@@ -243,7 +230,7 @@ Update `timeline.service.ts:loadTimelineAudio` to read `row.content?.priority ??
 - [ ] Audio playback continues to work (dual-buffer crossfade, music bed, autoplay-blocked recovery).
 - [ ] No file in `apps/web/` contains hard-coded headlines, tickers, prices, or anchor names.
 - [ ] All times rendered in ET via `Intl.DateTimeFormat`.
-- [ ] `MARKETS_API_KEY` documented in `.env.example`.
+- [ ] Required env vars documented in `.env.example`.
 - [ ] Lighthouse passes; no layout shift on the ticker.
 - [ ] Works in mobile viewport (≤960px) — collapse rundown under the stage; ticker + crawl span full width.
 

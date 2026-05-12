@@ -81,7 +81,12 @@ export function BroadcastShell() {
       </div>
       <div className="fixed bottom-0 left-0 right-0">
         <Ticker headlines={headlines} error={headlineError} />
-        <MarketsCrawl available={markets.available} items={markets.items} message={markets.message ?? "Markets feed offline"} />
+        <MarketsCrawl
+          available={markets.available}
+          items={markets.items}
+          message={markets.message ?? "Markets feed offline"}
+          onCycleComplete={() => void markets.refreshNow()}
+        />
       </div>
     </div>
   );

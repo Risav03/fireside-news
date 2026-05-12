@@ -118,48 +118,18 @@ The ticker component fetches this every 30–60s and renders `headlines[].text`.
 
 ### 3b. `apps/web/app/api/markets/route.ts`
 
-Fetch real quotes server-side. Pick one of:
-
-- **Stocks/indices**: Alpha Vantage, Finnhub, Polygon, or Yahoo Finance unofficial. (Add `MARKETS_API_KEY` to `.env`.)
-- **Crypto**: CoinGecko `/simple/price` (free, no key) or Coinbase public API.
-
-Sketch using CoinGecko + a stocks provider:
+Fetch real quotes server-side from Dexscreener, then normalize them into the crawl item shape.
 
 ```ts
 import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
-export const revalidate = 30;
-
-const STOCKS = ["^GSPC", "^IXIC", "^DJI", "^RUT", "GC=F", "CL=F", "^TNX", "DX-Y.NYB", "^VIX"];
-const CRYPTO_IDS = ["bitcoin", "ethereum", "solana"];
+const CHAINS = ["base", "solana"] as const;
 
 export async function GET() {
-  const [stocksRes, cryptoRes] = await Promise.all([
-    fetch(`https://query1.finance.yahoo.com/v7/finance/quote?symbols=${STOCKS.join(",")}`,
-      { next: { revalidate: 30 } }),
-    fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${CRYPTO_IDS.join(",")}&vs_currencies=usd&include_24hr_change=true`,
-      { next: { revalidate: 30 } }),
-  ]);
-
-  const stocks = (await stocksRes.json()).quoteResponse.result.map((q: any) => ({
-    sym: q.shortName,
-    val: q.regularMarketPrice?.toFixed(2),
-    chg: q.regularMarketChange?.toFixed(2),
-    pct: q.regularMarketChangePercent?.toFixed(2) + "%",
-    up:  q.regularMarketChange >= 0,
-  }));
-
-  const cryptoJson = await cryptoRes.json();
-  const crypto = CRYPTO_IDS.map((id) => ({
-    sym: id.toUpperCase().slice(0, 3) + "/USD",
-    val: cryptoJson[id].usd.toFixed(2),
-    chg: cryptoJson[id].usd_24h_change?.toFixed(2),
-    pct: cryptoJson[id].usd_24h_change?.toFixed(2) + "%",
-    up:  cryptoJson[id].usd_24h_change >= 0,
-  }));
-
-  return NextResponse.json({ items: [...stocks, ...crypto] });
+  // Fetch Dexscreener boosted/profile token candidates, keep Base and Solana,
+  // then enrich token addresses through /tokens/v1/{chainId}/{tokenAddresses}.
+  return NextResponse.json({ available: true, items });
 }
 ```
 
@@ -222,6 +192,6 @@ When porting, these MUST go:
 - [ ] Markets crawl pulls from `/api/markets`; refreshes every 30s
 - [ ] Waveform scene is driven by the real `<audio>` element via Web Audio API
 - [ ] Page works with autoplay blocked (button to start, same as old `RadioPlayer`)
-- [ ] All env vars (`MARKETS_API_KEY`, etc.) added to `apps/web/app/env.ts`
+- [ ] Required env vars documented in `.env.example`
 - [ ] `bun run typecheck` passes from repo root
 - [ ] `bun run lint` passes

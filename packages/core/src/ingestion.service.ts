@@ -1,135 +1,27 @@
 import type { PrismaClient } from "@repo/db";
-import { optionalEnv, requireEnv } from "@repo/utils";
+import { requireEnv } from "@repo/utils";
 import { contentHash } from "./text";
 import type { IngestedArticle } from "./types";
 
-type NewsApiArticle = {
-  title?: string;
-  description?: string;
-  content?: string;
-  url?: string;
-  publishedAt?: string;
-  source?: {
-    name?: string;
-  };
+type RssFeed = {
+  url: string;
+  source: string;
 };
 
-type AlphaVantageNewsArticle = {
-  title?: string;
-  summary?: string;
-  url?: string;
-  time_published?: string;
-  source?: string;
-};
+const CRYPTO_NEWS_FEEDS: RssFeed[] = [
+  { source: "CoinDesk", url: "https://www.coindesk.com/arc/outboundfeeds/rss/" },
+  { source: "Cointelegraph", url: "https://cointelegraph.com/rss" },
+];
+
+const NEWS_ARTICLE_LIMIT = 30;
 
 export async function fetchNewsArticles(): Promise<IngestedArticle[]> {
-  const apiKey = optionalEnv("NEWS_API_KEY");
+  const feedResults = await Promise.allSettled(CRYPTO_NEWS_FEEDS.map(fetchRssFeed));
+  const articles = feedResults.flatMap((result) => (result.status === "fulfilled" ? result.value : []));
 
-  if (!apiKey) {
-    return [];
-  }
-
-  const url = new URL("https://newsapi.org/v2/top-headlines");
-  url.searchParams.set("category", "technology");
-  url.searchParams.set("language", "en");
-  url.searchParams.set("pageSize", "20");
-  url.searchParams.set("apiKey", apiKey);
-
-  const response = await fetch(url);
-
-  if (!response.ok) {
-    throw new Error(`NewsAPI request failed: ${response.status} ${response.statusText}`);
-  }
-
-  const payload = (await response.json()) as { articles?: NewsApiArticle[] };
-
-  return (payload.articles ?? [])
-    .filter((article) => article.title && article.url)
-    .map((article) => ({
-      title: article.title ?? "",
-      content: article.content ?? article.description ?? article.title ?? "",
-      source: article.source?.name ?? "NewsAPI",
-      url: article.url ?? "",
-      publishedAt: article.publishedAt ? new Date(article.publishedAt) : new Date(),
-      category: "news",
-    }));
-}
-
-export async function fetchCryptoArticles(): Promise<IngestedArticle[]> {
-  const response = await fetch("https://api.coingecko.com/api/v3/search/trending");
-
-  if (!response.ok) {
-    throw new Error(`CoinGecko request failed: ${response.status} ${response.statusText}`);
-  }
-
-  const payload = (await response.json()) as {
-    coins?: Array<{
-      item?: {
-        name?: string;
-        symbol?: string;
-        market_cap_rank?: number;
-        data?: {
-          price?: string;
-          price_change_percentage_24h?: Record<string, number>;
-        };
-      };
-    }>;
-  };
-
-  return (payload.coins ?? []).slice(0, 10).flatMap(({ item }) => {
-    if (!item?.name || !item.symbol) {
-      return [];
-    }
-
-    const change = item.data?.price_change_percentage_24h?.usd;
-    const direction = typeof change === "number" && change >= 0 ? "up" : "down";
-    const changeText = typeof change === "number" ? `${Math.abs(change).toFixed(2)} percent ${direction}` : "moving";
-    const title = `${item.name} trends on CoinGecko`;
-
-    return [
-      {
-        title,
-        content: `${item.name} (${item.symbol.toUpperCase()}) is ${changeText} over 24 hours. Market cap rank is ${item.market_cap_rank ?? "unranked"}.`,
-        source: "CoinGecko",
-        url: `https://www.coingecko.com/en/coins/${item.name.toLowerCase().replace(/\s+/g, "-")}`,
-        publishedAt: new Date(),
-        category: "crypto" as const,
-      },
-    ];
-  });
-}
-
-export async function fetchStockArticles(): Promise<IngestedArticle[]> {
-  const apiKey = optionalEnv("ALPHA_VANTAGE_API_KEY");
-
-  if (!apiKey) {
-    return [];
-  }
-
-  const url = new URL("https://www.alphavantage.co/query");
-  url.searchParams.set("function", "NEWS_SENTIMENT");
-  url.searchParams.set("topics", "technology");
-  url.searchParams.set("limit", "20");
-  url.searchParams.set("apikey", apiKey);
-
-  const response = await fetch(url);
-
-  if (!response.ok) {
-    throw new Error(`Alpha Vantage request failed: ${response.status} ${response.statusText}`);
-  }
-
-  const payload = (await response.json()) as { feed?: AlphaVantageNewsArticle[] };
-
-  return (payload.feed ?? [])
-    .filter((article) => article.title && article.url)
-    .map((article) => ({
-      title: article.title ?? "",
-      content: article.summary ?? article.title ?? "",
-      source: article.source ?? "Alpha Vantage",
-      url: article.url ?? "",
-      publishedAt: parseAlphaVantageDate(article.time_published),
-      category: "stocks",
-    }));
+  return dedupeByUrl(articles)
+    .sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime())
+    .slice(0, NEWS_ARTICLE_LIMIT);
 }
 
 export async function storeArticles(prisma: PrismaClient, articles: IngestedArticle[]): Promise<string[]> {
@@ -162,21 +54,91 @@ export async function storeArticles(prisma: PrismaClient, articles: IngestedArti
   return ids;
 }
 
-function parseAlphaVantageDate(value?: string): Date {
-  if (!value) {
-    return new Date();
-  }
-
-  const match = value.match(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})$/);
-
-  if (!match) {
-    return new Date(value);
-  }
-
-  const [, year, month, day, hour, minute, second] = match;
-  return new Date(Date.UTC(Number(year), Number(month) - 1, Number(day), Number(hour), Number(minute), Number(second)));
-}
-
 export function assertIngestionConfigured() {
   requireEnv("DATABASE_URL");
+}
+
+async function fetchRssFeed(feed: RssFeed): Promise<IngestedArticle[]> {
+  const response = await fetch(feed.url, { cache: "no-store" });
+
+  if (!response.ok) {
+    throw new Error(`${feed.source} RSS request failed: ${response.status} ${response.statusText}`);
+  }
+
+  const xml = await response.text();
+
+  return parseRssItems(xml).flatMap((item) => {
+    if (!item.title || !item.url) {
+      return [];
+    }
+
+    return [
+      {
+        title: item.title,
+        content: item.description || item.title,
+        source: feed.source,
+        url: item.url,
+        publishedAt: item.publishedAt,
+        category: "crypto" as const,
+      },
+    ];
+  });
+}
+
+function parseRssItems(xml: string) {
+  const itemMatches = xml.match(/<item\b[\s\S]*?<\/item>/gi) ?? [];
+
+  return itemMatches.map((itemXml) => ({
+    title: cleanXmlText(getTagText(itemXml, "title")),
+    description: cleanXmlText(getTagText(itemXml, "description") || getTagText(itemXml, "content:encoded")),
+    url: cleanXmlText(getTagText(itemXml, "link") || getTagText(itemXml, "guid")),
+    publishedAt: parseDate(cleanXmlText(getTagText(itemXml, "pubDate") || getTagText(itemXml, "updated"))),
+  }));
+}
+
+function getTagText(xml: string, tagName: string) {
+  const escapedTagName = tagName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const match = xml.match(new RegExp(`<${escapedTagName}(?:\\s[^>]*)?>([\\s\\S]*?)<\\/${escapedTagName}>`, "i"));
+  return match?.[1] ?? "";
+}
+
+function cleanXmlText(value: string) {
+  return decodeXmlEntities(
+    value
+      .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
+      .replace(/<[^>]+>/g, "")
+      .replace(/\s+/g, " ")
+      .trim(),
+  );
+}
+
+function decodeXmlEntities(value: string) {
+  return value
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&apos;/g, "'");
+}
+
+function parseDate(value: string) {
+  const parsed = value ? new Date(value) : new Date();
+  return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
+}
+
+function dedupeByUrl(articles: IngestedArticle[]) {
+  const seen = new Set<string>();
+  const deduped: IngestedArticle[] = [];
+
+  for (const article of articles) {
+    if (seen.has(article.url)) {
+      continue;
+    }
+
+    seen.add(article.url);
+    deduped.push(article);
+  }
+
+  return deduped;
 }

@@ -3,21 +3,68 @@ import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
-type MarketItem = { sym: string; val: string; chg: string; pct: string; up: boolean };
+type MarketItem = {
+  sym: string;
+  name: string;
+  val: string;
+  chg: string;
+  pct: string;
+  up: boolean;
+  chain: ChainId;
+  iconUrl?: string;
+  url: string;
+};
 type MarketsPayload = { available: boolean; items: MarketItem[]; message?: string };
+type ChainId = "base" | "solana";
+
+type DexPair = {
+  chainId?: string;
+  url?: string;
+  pairAddress?: string;
+  baseToken?: {
+    address?: string;
+    symbol?: string;
+    name?: string;
+  };
+  priceUsd?: string | null;
+  priceChange?: {
+    h24?: number;
+  } | null;
+  volume?: {
+    h24?: number;
+  };
+  liquidity?: {
+    usd?: number | null;
+  } | null;
+  info?: {
+    imageUrl?: string;
+  };
+};
+
+type DexMeta = {
+  slug?: string;
+};
+
+type DexMetaResponse = {
+  pairs?: DexPair[];
+};
 
 const CACHE_TTL_MS = 45_000;
-const CRYPTO_IDS = [
-  ["bitcoin", "BTC"],
-  ["ethereum", "ETH"],
-  ["solana", "SOL"],
-] as const;
-const STOCKS = [
-  ["spy.us", "SPY"],
-  ["aapl.us", "AAPL"],
-  ["msft.us", "MSFT"],
-  ["nvda.us", "NVDA"],
-] as const;
+const ITEMS_PER_CHAIN = 30;
+const META_LIMIT = 30;
+const DEXSCREENER_BASE_URL = "https://api.dexscreener.com";
+const CHAINS = [
+  { id: "base", label: "BASE" },
+  { id: "solana", label: "SOL" },
+] satisfies Array<{ id: ChainId; label: string }>;
+const SEARCH_QUERIES: Record<ChainId, string[]> = {
+  base: ["base", "virtual", "aerodrome", "degen", "toshi"],
+  solana: ["solana", "pump", "raydium", "bonk", "jupiter"],
+};
+const FETCH_HEADERS = {
+  "accept": "application/json,text/html;q=0.9,*/*;q=0.8",
+  "user-agent": "Mozilla/5.0 (compatible; FiresideNews/1.0; +https://localhost)",
+};
 
 let cachedPayload: { expiresAt: number; payload: MarketsPayload } | null = null;
 
@@ -34,88 +81,111 @@ const compactUsdFormatter = new Intl.NumberFormat("en-US", {
 });
 
 function formatUsd(value: number) {
-  return value >= 1_000 ? compactUsdFormatter.format(value) : usdFormatter.format(value);
-}
+  if (value >= 1_000) {
+    return compactUsdFormatter.format(value);
+  }
 
-function formatSigned(value: number) {
-  return `${value >= 0 ? "+" : ""}${value.toFixed(2)}`;
+  if (value >= 0.01) {
+    return usdFormatter.format(value);
+  }
+
+  return `$${value.toPrecision(3)}`;
 }
 
 function formatPct(value: number) {
   return `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`;
 }
 
-async function fetchCryptoItems(): Promise<MarketItem[]> {
-  const ids = CRYPTO_IDS.map(([id]) => id).join(",");
-  const response = await fetch(
-    `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`,
-    { cache: "no-store" },
+async function fetchJson<T>(path: string): Promise<T> {
+  const response = await fetch(`${DEXSCREENER_BASE_URL}${path}`, { cache: "no-store", headers: FETCH_HEADERS });
+
+  if (!response.ok) {
+    throw new Error(`dexscreener ${path} ${response.status}`);
+  }
+
+  return (await response.json()) as T;
+}
+
+async function fetchTrendingMetaPairs() {
+  const metas = await fetchJson<DexMeta[]>("/metas/trending/v1");
+  const slugs = metas.flatMap((meta) => (meta.slug ? [meta.slug] : [])).slice(0, META_LIMIT);
+  const results = await Promise.allSettled(slugs.map((slug) => fetchJson<DexMetaResponse>(`/metas/meta/v1/${encodeURIComponent(slug)}`)));
+
+  return results.flatMap((result) => (result.status === "fulfilled" ? (result.value.pairs ?? []) : []));
+}
+
+async function fetchSearchPairs(chainId: ChainId) {
+  const results = await Promise.allSettled(
+    SEARCH_QUERIES[chainId].map((query) => fetchJson<DexMetaResponse>(`/latest/dex/search?q=${encodeURIComponent(query)}`)),
   );
 
-  if (!response.ok) {
-    throw new Error(`coingecko ${response.status}`);
-  }
+  return results.flatMap((result) => (result.status === "fulfilled" ? (result.value.pairs ?? []) : []));
+}
 
-  const data = (await response.json()) as Record<string, { usd?: number; usd_24h_change?: number }>;
+async function fetchSupplementalPairs() {
+  const results = await Promise.allSettled(CHAINS.map((chain) => fetchSearchPairs(chain.id)));
+  return results.flatMap((result) => (result.status === "fulfilled" ? result.value : []));
+}
 
-  return CRYPTO_IDS.flatMap(([id, sym]) => {
-    const price = data[id]?.usd;
-    const pct = data[id]?.usd_24h_change;
+function getTopPairsByToken(chainId: ChainId, pairs: DexPair[]) {
+  const bestPairs = new Map<string, DexPair>();
 
-    if (typeof price !== "number" || typeof pct !== "number") {
-      return [];
+  for (const pair of pairs) {
+    const tokenSymbol = pair.baseToken?.symbol?.toUpperCase();
+
+    if (!tokenSymbol || pair.chainId !== chainId) {
+      continue;
     }
 
-    return [{ sym, val: formatUsd(price), chg: formatPct(pct), pct: "24H", up: pct >= 0 }];
-  });
-}
+    const key = `${chainId}:${tokenSymbol}`;
+    const current = bestPairs.get(key);
 
-function parseCsvLine(line: string) {
-  return line.split(",").map((cell) => cell.trim());
-}
-
-async function fetchStockItem(symbol: string, sym: string): Promise<MarketItem | null> {
-  const response = await fetch(`https://stooq.com/q/l/?s=${symbol}&f=sd2t2ohlc&h&e=csv`, { cache: "no-store" });
-
-  if (!response.ok) {
-    throw new Error(`stooq ${response.status}`);
+    if (!current || getPairScore(pair) > getPairScore(current)) {
+      bestPairs.set(key, pair);
+    }
   }
 
-  const text = await response.text();
-  const rows = text.trim().split(/\r?\n/).map(parseCsvLine);
-  const [, , , openRaw, , , closeRaw] = rows[1] ?? [];
-  const open = Number.parseFloat(openRaw ?? "");
-  const close = Number.parseFloat(closeRaw ?? "");
+  return bestPairs;
+}
 
-  if (!Number.isFinite(open) || !Number.isFinite(close) || open <= 0) {
+function getPairScore(pair: DexPair) {
+  return pair.liquidity?.usd ?? pair.volume?.h24 ?? 0;
+}
+
+function pairToMarketItem(pair: DexPair, chainId: ChainId, chainLabel: string): MarketItem | null {
+  const symbol = pair.baseToken?.symbol;
+  const name = pair.baseToken?.name;
+  const price = Number.parseFloat(pair.priceUsd ?? "");
+  const change = pair.priceChange?.h24;
+
+  if (!symbol || !name || !pair.url || !Number.isFinite(price) || typeof change !== "number") {
     return null;
   }
 
-  const change = close - open;
-  const pct = (change / open) * 100;
-
-  return { sym, val: formatUsd(close), chg: formatSigned(change), pct: formatPct(pct), up: change >= 0 };
+  return {
+    sym: symbol.toUpperCase(),
+    name,
+    val: formatUsd(price),
+    chg: formatPct(change),
+    pct: "24H",
+    up: change >= 0,
+    chain: chainId,
+    iconUrl: pair.info?.imageUrl,
+    url: pair.url,
+  };
 }
 
-async function fetchStockItems(): Promise<MarketItem[]> {
-  const results = await Promise.allSettled(STOCKS.map(([symbol, sym]) => fetchStockItem(symbol, sym)));
-  return results.flatMap((result) => (result.status === "fulfilled" && result.value ? [result.value] : []));
-}
+function getChainMarketItems(metaPairs: DexPair[], supplementalPairs: DexPair[], chain: { id: ChainId; label: string }) {
+  const metaTopPairs = [...getTopPairsByToken(chain.id, metaPairs).values()];
+  const supplementalTopPairs = [...getTopPairsByToken(chain.id, supplementalPairs).values()];
 
-function interleave<T>(left: T[], right: T[]) {
-  const merged: T[] = [];
-  const maxLength = Math.max(left.length, right.length);
-
-  for (let i = 0; i < maxLength; i += 1) {
-    if (left[i]) {
-      merged.push(left[i]);
-    }
-    if (right[i]) {
-      merged.push(right[i]);
-    }
-  }
-
-  return merged;
+  return [...getTopPairsByToken(chain.id, [...metaTopPairs, ...supplementalTopPairs]).values()]
+    .sort((a, b) => getPairScore(b) - getPairScore(a))
+    .flatMap((pair) => {
+      const item = pairToMarketItem(pair, chain.id, chain.label);
+      return item ? [item] : [];
+    })
+    .slice(0, ITEMS_PER_CHAIN);
 }
 
 export async function GET() {
@@ -123,16 +193,16 @@ export async function GET() {
     return NextResponse.json(cachedPayload.payload, { headers: { "cache-control": "no-store" } });
   }
 
-  const [cryptoResult, stockResult] = await Promise.allSettled([fetchCryptoItems(), fetchStockItems()]);
-  const cryptoItems = cryptoResult.status === "fulfilled" ? cryptoResult.value : [];
-  const stockItems = stockResult.status === "fulfilled" ? stockResult.value : [];
-  const items = interleave(cryptoItems, stockItems);
+  const [metaPairs, supplementalPairs] = await Promise.all([fetchTrendingMetaPairs(), fetchSupplementalPairs()]);
+  const items = CHAINS.flatMap((chain) => getChainMarketItems(metaPairs, supplementalPairs, chain));
   const payload: MarketsPayload =
     items.length > 0
-      ? { available: true, items, message: "Markets live" }
+      ? { available: true, items, message: "Dexscreener markets live" }
       : { available: false, items: [], message: "Markets feed offline" };
 
-  cachedPayload = { expiresAt: Date.now() + CACHE_TTL_MS, payload };
+  if (items.length > 0) {
+    cachedPayload = { expiresAt: Date.now() + CACHE_TTL_MS, payload };
+  }
 
   return NextResponse.json(payload, { headers: { "cache-control": "no-store" } });
 }
